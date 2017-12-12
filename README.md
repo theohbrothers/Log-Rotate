@@ -50,7 +50,7 @@ size 1M
 - *nix: Run <code>powershell ./Log-Rotate.ps1</code> or <code>pwsh ./Log-Rotate.ps1</code> depending on which version of powershell you're running.
 
 ### As a Module
-1. [Install](https://msdn.microsoft.com/en-us/library/dd878350(v=vs.85).aspx) the `Log-Rotate.psm1` module into **any** of the following"
+1. [Install](https://msdn.microsoft.com/en-us/library/dd878350(v=vs.85).aspx) the `Log-Rotate.psm1` module into **any** of the following directories:
 
 *Windows*
 ```powershell
@@ -61,6 +61,7 @@ size 1M
 %ProgramFiles%\WindowsPowerShell\Modules
 ```
 **nix*
+> Note: These may vary between *nix distros. Check `$Env:PSModulePath` inside `Powershell`.
 ```powershell
 ~/.local/share/powershell/Modules
 
@@ -68,7 +69,7 @@ size 1M
 
 /opt/microsoft/powershell/6.0.0-rc/Modules
 ```
-The above may vary between *nix distros. Check `$Env:PSModulePath` inside `Powershell`.
+
 
 2. Import the module, then pipe the config into the module:
 ```powershell
