@@ -31,7 +31,7 @@ size 100k
     prerotate
         Write-Host "I am a script and my log file's full path is: $($Args[0]). I could email my log using Powershell"
         $content = Get-Content $Args[0]
-        Send-MailMessage ..... 
+        #Send-MailMessage ..... 
     endscript
 }
 
@@ -43,7 +43,7 @@ size 100k
     postrotate
         /usr/bin/killall -HUP httpd
         echo "I am a script and my log file's full path is ${0}"
-        sendmail -s .....
+        #sendmail -s .....
     endscript
 }
 
@@ -106,8 +106,8 @@ function Start-Script {
     begin {
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
-        if (1 -eq 1 -or $g_debugFlag -band 2) { Write-Verbose "[Start-Script] callerEA: $callerEA" }
-        if (1 -eq 1 -or $g_debugFlag -band 2) { Write-Verbose "[Start-Script] ErrorActionPreference: $ErrorActionPreference" } 
+        if ($g_debugFlag -band 2) { Write-Verbose "[Start-Script] callerEA: $callerEA" }
+        if ($g_debugFlag -band 2) { Write-Verbose "[Start-Script] ErrorActionPreference: $ErrorActionPreference" } 
     }
 
     process {
@@ -531,24 +531,40 @@ $LogObject = [PSCustomObject]@{
             ,
                 [Parameter(Mandatory=$True,Position=1)]
                 [ValidateRange(0, [int]::MaxValue)]
-                [int]$keepcount
+                [int]$keep_count
             ,
                 [Parameter(Mandatory=$True,Position=2)]
                 [int]$oldest_is_first_when_name_sorted
             )
         
-            $oldfiles = if ($oldest_is_first_when_name_sorted) {
-                            # Datetime. Exclude the last x items, when sorted by name ascending.
-                            $files | Sort-Object -Property Name | Select-Object -SkipLast $keepcount
-                        }else {
-                            # Descending index. Exclude the last x items, when sorted by name descending.
-                            $files | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(20) }) } -Descending | Select-Object -SkipLast $keepcount
-                        }
-            $oldfiles | ForEach-Object {
-                Write-Verbose "Removing $($_.FullName)"
-                Purge-File $_.FullName
+            $files_count =  if ($files) {
+                                $files.Count
+                            }else {
+                                0
+                            }
+            if ($files_count) {
+                if ($keep_count -ge $files_count) {
+                    # If keeping 365 copies, and I only have 5.
+                    # If keeping 5 copies, and I have 5
+                    Write-Verbose "No more old files to remove $($_.FullName)"
+                    return
+                }
+                
+                $oldfiles_count = $files_count - $keep_count
+                $oldfiles = if ($oldest_is_first_when_name_sorted) {
+                    # Datetime. Exclude the last x items, when sorted by name ascending.
+                    #$files | Sort-Object -Property Name | Select-Object -SkipLast $keep_count
+                    $files | Sort-Object -Property Name | Select-Object -First $oldfiles_count
+                }else {
+                    # Descending index. Exclude the last x items, when sorted by name descending.
+                    #$files | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(20) }) } -Descending | Select-Object -SkipLast $keep_count
+                    $files | Sort-Object { [regex]::Replace($_.Name, '\d+', { $args[0].Value.PadLeft(20) }) } -Descending | Select-Object -First $oldfiles_count
+                }
+                $oldfiles | ForEach-Object {
+                    Write-Verbose "Removing $($_.FullName)"
+                    Purge-File $_.FullName
+                }
             }
-        
         }
 
     }
@@ -739,7 +755,7 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
                                                         "$my_previous_name$compressext" 
                                                     }
 
-        $my_index_regex = "\d{$( (1..$rotate.ToString().Length) -join ',' )}";
+        $my_index_regex = "\d{1,$( $rotate.ToString().Length )}";
         $my_previous_noncompressed_regex = if ($_preserve_extension) {
                                                 # E.g. '^console\-[0-9]{4}-[0-9]{2}-[0-9]{2}\.log$' or '^console\.\d{1,2,3}\.log$'
                                                 if ($dateext) {
@@ -1208,7 +1224,7 @@ $LogObject | Add-Member -Name 'PostPostRotate' -MemberType ScriptMethod -Value {
 
             $this.Status.postpostrotate = $true
         }else {
-            # Remove expired file
+            # Remove expired files
             if ($rotate -gt 0) {
                 $keep_prev_count = $rotate
                 $prev_files = Get-Files $my_previous_noncompressed_regex $my_previous_directory | Where-Object { 
@@ -1646,7 +1662,7 @@ function Log-Rotate {
                                             ''
                                         }
            # Validate that the compress command exists
-            if ($compress) {
+            if ($compress -and !$nocompress) {
                 try {
                     Get-Command $compresscmd -ErrorAction Stop | Out-Null
                 }catch {
