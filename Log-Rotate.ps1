@@ -12,6 +12,7 @@ $myConfig = @'
 # Separate entries with spaces. 
 
 # Global options
+daily
 nocompress
 size 100k
 
@@ -26,11 +27,10 @@ size 100k
     compressext .7z
     dateext
     delaycompress
-    minsize 1M
     sharedscripts
     prerotate
         Write-Host "I am a script and my log file's full path is: $($Args[0]). I could email my log using Powershell"
-        $content = Get-Content $Args[0]
+        $content = Get-Content $Args[0] -raw
         #Send-MailMessage ..... 
     endscript
 }
