@@ -10,6 +10,7 @@ $myConfig = @'
 ############################
 # BEGIN ADDING CONFIG HERE #
 ############################
+
 # If a directory is specified with a wildcard (*), all files within it are rotated. 
 # If a file is specified, that file will be rotated.
 # Separate log files/directories with spaces, all in single line before the bracer '{'
@@ -46,7 +47,6 @@ C:\inetpub\logs\iis\mylogs\*.log {
         Write-Host "I am a script and my log file's full path is: $($Args[0]). I could email my log using Powershell"            
         #$content = Get-Content $Args[0] -Raw
         #Send-MailMessage -Body $content .....
-
     endscript
 }
 
