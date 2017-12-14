@@ -1,23 +1,38 @@
 ﻿###############################################################################
+#                          LOG-ROTATE SCRIPT CONFIGURATION                    #
+###############################################################################
+
+# 
 # Declare your config inside the Here-String. An optimal sample is provided.
 # For a list of configuration options, refer to logrotate manual:
 #     https://linux.die.net/man/8/logrotate
-###############################################################################
 $myConfig = @'
-##### Start adding Config here #####
-
+############################
+# BEGIN ADDING CONFIG HERE #
+############################
 # If a directory is specified with a wildcard (*), all files within it are rotated. 
 # If a file is specified, that file will be rotated.
-# Use double-quotes if path has spaces.
-# Separate entries with spaces. 
+# Separate log files/directories with spaces, all in single line before the bracer '{'
+# Use double-quotes (not single quotes) if path has spaces.
+# For example:
+#         C:\inetpub\logs\iis\mylogs\*.log C:\myserver\console.log "C:\myserver2\folder with spaces\console.log" {
+#             rotate 5
+#             size 10M
+#             nocompress
+#         }
+# Or for *nix"
+#         /var/log/nginx/mylogs/*.log /var/log/myserver/console.log "/var/log/myserver/folder with spaces/console.log" {
+#             rotate 5
+#             size 10M
+#             nocompress
+#         } 
 
 # Global options
 daily
 nocompress
-size 100k
 
-# Block options - Windows
-"C:\inetpub\logs\iis\mylogs\*.log" {
+# Windows sample
+C:\inetpub\logs\iis\mylogs\*.log {
     rotate 3650
     size 1M
     extension .log
@@ -27,15 +42,15 @@ size 100k
     compressext .7z
     dateext
     delaycompress
-    sharedscripts
     prerotate
-        Write-Host "I am a script and my log file's full path is: $($Args[0]). I could email my log using Powershell"
-        $content = Get-Content $Args[0] -raw
-        #Send-MailMessage ..... 
+        Write-Host "I am a script and my log file's full path is: $($Args[0]). I could email my log using Powershell"            
+        #$content = Get-Content $Args[0] -Raw
+        #Send-MailMessage -Body $content .....
+
     endscript
 }
 
-# Block options - *nix
+# *nix sample
 /var/log/nginx/mylogs/*.log  {
     compresscmd 7z
     compressoptions a -t7z
@@ -47,8 +62,44 @@ size 100k
     endscript
 }
 
-##### End adding #####
+############################
+#  END ADDING CONFIG HERE  #
+############################
 '@
+
+
+# Forced-Rotation Mode
+# Use this to force a one-time rotation.
+# In this mode, rotation(s) will be forced to occur.
+#   Explanation: 
+#     You are essentially telling Log-Rotate to ignore all rotation size/time thresholds 
+#     (as specified in 'size', 'weekly', 'daily', 'monthly', 'yearly', 'minsize' options).
+#     In other words, all those conditions for not rotating log(s) are ignored. Which means
+#     Log-Rotate will go ahead and rotate those logs.
+# 0 - OFF
+# 1 - ON
+# Default: 0
+$Force = 0
+
+
+# Debug Mode
+# Use this to test your configuration.
+# In this mode, no log files will be rotated.
+# Very useful when used in combination with the Forced-Rotation mode, you will be able to see the full
+#   rotation logic without rotating any logs.
+# Once done testing, turn it off to perform the actual rotation(s).
+# 0 - OFF
+# 1 - ON
+# Default: 0
+$Debug = 0
+
+
+###############################################################################
+#                           END OF SCRIPT CONFIGURATION                       #
+###############################################################################
+
+
+
 
 #####################
 #  Helper functions #
@@ -56,9 +107,9 @@ size 100k
 function Get-Size-Bytes {
     # Returns a size specified with a unit (E.g. 100, 100k, 100M, 100G) into bytes without a unit
     param ([string]$size_str)
-    if ($g_debugFlag -band 2) { Write-Debug "[Get-Size-Bytes] Verbose stream: $VerbosePreference" }
-    if ($g_debugFlag -band 2) { Write-Debug "[Get-Size-Bytes] Debug stream: $DebugPreference" } 
-    if ($g_debugFlag -band 2) { Write-Debug "[Get-Size-Bytes] Erroraction: $ErrorActionPreference" }
+    if ($g_debugFlag -band 4) { Write-Debug "[Get-Size-Bytes] Verbose stream: $VerbosePreference" }
+    if ($g_debugFlag -band 4) { Write-Debug "[Get-Size-Bytes] Debug stream: $DebugPreference" } 
+    if ($g_debugFlag -band 4) { Write-Debug "[Get-Size-Bytes] Erroraction: $ErrorActionPreference" }
 
     if ($size_str -match '(?:[0-9]+|[0-9]+(?:k|M|G))$') {
         $size_unit = $size_str -replace '[0-9]+'
@@ -85,7 +136,10 @@ function Get-Exception-Message ($ErrorRecord) {
         }
     }
     $Message = Get-InnerExceptionMessage $ErrorRecord.Exception
-    $Message  + "`nStacktrace:`n" + $ErrorRecord.Exception.ErrorRecord.ScriptStackTrace   
+    if ($g_debugFlag -band 2) {
+        $Message = $Message  + "`nStacktrace:`n" + $ErrorRecord.Exception.ErrorRecord.ScriptStackTrace   
+    }
+    $Message
 }
 function likeIn ([string]$string, [string[]]$wildcardblobs) {
     foreach ($wildcardblob in $wildcardblobs) {
@@ -106,8 +160,8 @@ function Start-Script {
     begin {
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
-        if ($g_debugFlag -band 2) { Write-Verbose "[Start-Script] callerEA: $callerEA" }
-        if ($g_debugFlag -band 2) { Write-Verbose "[Start-Script] ErrorActionPreference: $ErrorActionPreference" } 
+        if ($g_debugFlag -band 4) { Write-Verbose "[Start-Script] callerEA: $callerEA" }
+        if ($g_debugFlag -band 4) { Write-Verbose "[Start-Script] ErrorActionPreference: $ErrorActionPreference" } 
     }
 
     process {
@@ -611,9 +665,9 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
     #>
     param ([System.IO.FileInfo]$logfile, [hashtable]$options, [string]$lastRotationDate)
 
-    if ($g_debugFlag -band 2) { Write-Debug "[LogObject][New] Verbose stream: $VerbosePreference" }
-    if ($g_debugFlag -band 2) { Write-Debug "[LogObject][New] Debug stream: $DebugPreference" } 
-    if ($g_debugFlag -band 2) { Write-Debug "[LogObject][New] Erroraction: $ErrorActionPreference" } 
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][New] Verbose stream: $VerbosePreference" }
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][New] Debug stream: $DebugPreference" } 
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][New] Erroraction: $ErrorActionPreference" } 
 
     # Unpack the block's options into variables
     $options.Keys | ForEach-Object {
@@ -965,20 +1019,18 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
             }
 
             return $_logObject
-        }else {
-            Write-Error "  log does not need rotating."
         }
     }else {
         if ($nomissingok) {
-            Write-Error "Specified log $logfile is not a file. Skipping rotation."
+            throw "Specified log $logfile is not a file."
         }
     }
     $null
 }
 $LogObject | Add-Member -Name 'PrePrerotate' -MemberType ScriptMethod -Value {
-    if ($g_debugFlag -band 2) { Write-Debug "[LogObject][PrePrerotate] Verbose stream: $VerbosePreference" }
-    if ($g_debugFlag -band 2) { Write-Debug "[LogObject][PrePrerotate] Debug stream: $DebugPreference" } 
-    if ($g_debugFlag -band 2) { Write-Debug "[LogObject][PrePrerotate] Erroraction: $ErrorActionPreference" }
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PrePrerotate] Verbose stream: $VerbosePreference" }
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PrePrerotate] Debug stream: $DebugPreference" } 
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PrePrerotate] Erroraction: $ErrorActionPreference" }
 
     # Unpack Object properties
     Set-Variable -Name 'logfile' -Value $this.Logfile
@@ -1129,9 +1181,9 @@ $LogObject | Add-Member -Name 'PrePrerotate' -MemberType ScriptMethod -Value {
     $this.Status.preprerotate
 }
 $LogObject | Add-Member -Name 'Prerotate' -MemberType ScriptMethod -Value {
-    if ($g_debugFlag -band 2) { Write-Debug "[LogObject][Prerotate] Verbose stream: $VerbosePreference" }
-    if ($g_debugFlag -band 2) { Write-Debug "[LogObject][Prerotate] Debug stream: $DebugPreference" } 
-    if ($g_debugFlag -band 2) { Write-Debug "[LogObject][Prerotate] Erroraction: $ErrorActionPreference" }
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Prerotate] Verbose stream: $VerbosePreference" }
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Prerotate] Debug stream: $DebugPreference" } 
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Prerotate] Erroraction: $ErrorActionPreference" }
 
     # Unpack Object properties
     $prerotate = $this.Options['prerotate']
@@ -1153,9 +1205,9 @@ $LogObject | Add-Member -Name 'Prerotate' -MemberType ScriptMethod -Value {
     $this.Status.prerotate
 }
 $LogObject | Add-Member -Name 'RotateMainOnly' -MemberType ScriptMethod -Value {
-    if ($g_debugFlag -band 2) { Write-Debug "[LogObject][RotateMainOnly] Verbose stream: $VerbosePreference" }
-    if ($g_debugFlag -band 2) { Write-Debug "[LogObject][RotateMainOnly] Debug stream: $DebugPreference" } 
-    if ($g_debugFlag -band 2) { Write-Debug "[LogObject][RotateMainOnly] Erroraction: $ErrorActionPreference" }
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][RotateMainOnly] Verbose stream: $VerbosePreference" }
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][RotateMainOnly] Debug stream: $DebugPreference" } 
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][RotateMainOnly] Erroraction: $ErrorActionPreference" }
 
     # Unpack Object properties
     Set-Variable -Name 'logfile' -Value $this.Logfile
@@ -1173,9 +1225,9 @@ $LogObject | Add-Member -Name 'RotateMainOnly' -MemberType ScriptMethod -Value {
     $this.Status.rotate
 }
 $LogObject | Add-Member -Name 'Postrotate' -MemberType ScriptMethod -Value {
-    if ($g_debugFlag -band 2) { Write-Debug "[LogObject][Postrotate] Verbose stream: $VerbosePreference" }
-    if ($g_debugFlag -band 2) { Write-Debug "[LogObject][Postrotate] Debug stream: $DebugPreference" } 
-    if ($g_debugFlag -band 2) { Write-Debug "[LogObject][Postrotate] Erroraction: $ErrorActionPreference" }
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Postrotate] Verbose stream: $VerbosePreference" }
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Postrotate] Debug stream: $DebugPreference" } 
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Postrotate] Erroraction: $ErrorActionPreference" }
     
     # Unpack Object properties
     $postrotate = $this.Options['postrotate']
@@ -1196,9 +1248,9 @@ $LogObject | Add-Member -Name 'Postrotate' -MemberType ScriptMethod -Value {
     $this.Status.postrotate
 }
 $LogObject | Add-Member -Name 'PostPostRotate' -MemberType ScriptMethod -Value {
-    if ($g_debugFlag -band 2) { Write-Debug "[LogObject][PostPostRotate] Verbose stream: $VerbosePreference" }
-    if ($g_debugFlag -band 2) { Write-Debug "[LogObject][PostPostRotate] Debug stream: $DebugPreference" } 
-    if ($g_debugFlag -band 2) { Write-Debug "[LogObject][PostPostRotate] Erroraction: $ErrorActionPreference" }
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PostPostRotate] Verbose stream: $VerbosePreference" }
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PostPostRotate] Debug stream: $DebugPreference" } 
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PostPostRotate] Erroraction: $ErrorActionPreference" }
 
     # Unpack Object properties
     Set-Variable -Name 'logfile' -Value $this.Logfile
@@ -1372,12 +1424,25 @@ function Log-Rotate {
         [alias("v")]
         [switch]$Version   
     )
+    
+    if ($debug) {
+        Write-Warning "We are in Debug mode. No logs will be rotated."
+    }
+    if ($Force) {
+        Write-Warning "We are in Forced-Rotation mode."
+    }
 
     # Debug bitwise flag (for developers)
+    # Enter the sum of all the options you want.
+    # All values above 1 implies 1.
     # 0 - Off
     # 1 - On, script does not change files. Calling Log-Rotate with -Debug will switch this to 1.
-    # 2 - On, verbose mode. Implies (1). This is NOT related to calling Log-Rotate with -Verbose, but strictly for debugging messages.
+    # 2 - Output Stacktrace in error messages
+    # 4 - On, verbose mode. Implies (1). This is NOT related to calling Log-Rotate with -Verbose, but strictly for debugging messages.
     $g_debugFlag = 0
+    if ($g_debugFlag) {
+        Write-Warning "Developer's debug flag is on."
+    }
 
     # Use Caller Error action if specified
     $CallerEA = $ErrorActionPreference
@@ -1416,9 +1481,9 @@ function Log-Rotate {
         param ([string]$MultipleConfig)
 
 
-        if ($g_debugFlag -band 2) { Write-Debug "[Compile-Full-Config] Verbose stream: $VerbosePreference" }
-        if ($g_debugFlag -band 2) { Write-Debug "[Compile-Full-Config] Debug stream: $DebugPreference" } 
-        if ($g_debugFlag -band 2) { Write-Debug "[Compile-Full-Config] Erroraction: $ErrorActionPreference" }
+        if ($g_debugFlag -band 4) { Write-Debug "[Compile-Full-Config] Verbose stream: $VerbosePreference" }
+        if ($g_debugFlag -band 4) { Write-Debug "[Compile-Full-Config] Debug stream: $DebugPreference" } 
+        if ($g_debugFlag -band 4) { Write-Debug "[Compile-Full-Config] Erroraction: $ErrorActionPreference" }
 
         [Scriptblock]$matchEvaluator = {
             param ($match)
@@ -1474,9 +1539,9 @@ function Log-Rotate {
     function Validate-Full-Config {
         param ([string]$FullConfig)
 
-        if ($g_debugFlag -band 2) { Write-Debug "[Validate-Full-Config] Verbose stream: $VerbosePreference" }
-        if ($g_debugFlag -band 2) { Write-Debug "[Validate-Full-Config] Debug stream: $DebugPreference" } 
-        if ($g_debugFlag -band 2) { Write-Debug "[Validate-Full-Config] Erroraction: $ErrorActionPreference" }
+        if ($g_debugFlag -band 4) { Write-Debug "[Validate-Full-Config] Verbose stream: $VerbosePreference" }
+        if ($g_debugFlag -band 4) { Write-Debug "[Validate-Full-Config] Debug stream: $DebugPreference" } 
+        if ($g_debugFlag -band 4) { Write-Debug "[Validate-Full-Config] Erroraction: $ErrorActionPreference" }
 
         function Get-LinesAround([string[]]$lines, [int]$line_number) {
             $start = 0
@@ -1622,9 +1687,9 @@ function Log-Rotate {
             $blockpath = $block.Path
             $logfiles = $block.Logfiles
             
-            if ($g_debugFlag -band 2) { Write-Debug "[Process-Local-Block] Verbose stream: $VerbosePreference" }
-            if ($g_debugFlag -band 2) { Write-Debug "[Process-Local-Block] Debug stream: $DebugPreference" } 
-            if ($g_debugFlag -band 2) { Write-Debug "[Process-Local-Block] Erroraction: $ErrorActionPreference" }
+            if ($g_debugFlag -band 4) { Write-Debug "[Process-Local-Block] Verbose stream: $VerbosePreference" }
+            if ($g_debugFlag -band 4) { Write-Debug "[Process-Local-Block] Debug stream: $DebugPreference" } 
+            if ($g_debugFlag -band 4) { Write-Debug "[Process-Local-Block] Erroraction: $ErrorActionPreference" }
             
             # $PSBoundParameters automatic variable is a hashtable containing all bound parameters (keys) and their arguments(values). These are our options.
             $options = $PSBoundParameters
@@ -1852,6 +1917,7 @@ function Log-Rotate {
                             Write-Verbose "Not running first action script, since no logs will be rotated"
                             Write-Verbose "Not running prerotate script, since no logs will be rotated"
                             Write-Verbose "Not running postrotate script, since no logs will be rotated"
+                            Write-Verbose "Not running preremove script, since no logs will be rotated"
                             Write-Verbose "Not running last action script, since no logs will be rotated"
                         } 
                     }
@@ -1870,12 +1936,12 @@ function Log-Rotate {
     try {   
         Write-Verbose "------------------------------ Log-Rotate --------------------------------------"
         Write-Verbose "Script root: $PSScriptRoot"
-        if ($g_debugFlag -band 2) { Write-Verbose "Verbose stream: $VerbosePreference" }
-        if ($g_debugFlag -band 2) { Write-Verbose "Debug stream: $DebugPreference" }
-        if ($g_debugFlag -band 2) { Write-Debug "Erroraction: $ErrorActionPreference" }
-        if ($g_debugFlag -band 2) { Write-Debug "g_debugFlag: $g_debugFlag" }
-        if ($g_debugFlag -band 2) { Write-Debug "CallerEA: $CallerEA" }
-        if ($g_debugFlag -band 2) { Write-Debug "ErrorActionPreference: $ErrorActionPreference" }
+        if ($g_debugFlag -band 4) { Write-Verbose "Verbose stream: $VerbosePreference" }
+        if ($g_debugFlag -band 4) { Write-Verbose "Debug stream: $DebugPreference" }
+        if ($g_debugFlag -band 4) { Write-Debug "Erroraction: $ErrorActionPreference" }
+        if ($g_debugFlag -band 4) { Write-Debug "g_debugFlag: $g_debugFlag" }
+        if ($g_debugFlag -band 4) { Write-Debug "CallerEA: $CallerEA" }
+        if ($g_debugFlag -band 4) { Write-Debug "ErrorActionPreference: $ErrorActionPreference" }
         
         # Get the configuration as a string
         if ($ConfigAsString) {
@@ -1977,9 +2043,9 @@ function Log-Rotate {
                         [Regex]$options_allowed_regex,
                         [string[]]$options_not_switches
                     )
-                    if ($g_debugFlag -band 2) { Write-Debug "[BlockFactory][Get-Options] Verbose stream: $VerbosePreference" }
-                    if ($g_debugFlag -band 2) { Write-Debug "[BlockFactory][Get-Options] Debug stream: $DebugPreference" } 
-                    if ($g_debugFlag -band 2) { Write-Debug "[BlockFactory][Get-Options] Erroraction: $ErrorActionPreference" }
+                    if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Options] Verbose stream: $VerbosePreference" }
+                    if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Options] Debug stream: $DebugPreference" } 
+                    if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Options] Erroraction: $ErrorActionPreference" }
             
                     $matches = $options_allowed_regex.Matches($configString)
                     $matches | ForEach-Object {
@@ -2024,7 +2090,7 @@ function Log-Rotate {
                         $yes = $_.Value
                         
                         if ( $child.ContainsKey($yes) -and (!$child.ContainsKey($no)) -and $parent.ContainsKey($no) ) {
-                            Write-Verbose "I said $yes, I didn't say $no, although my parent said $no, I'll still go ahead."
+                            if ($g_debugFlag -band 4) { Write-Verbose "I said $yes, I didn't say $no, although my parent said $no, I'll still go ahead." }
                             $my_options.Remove($no)
                         }
                     }
@@ -2035,9 +2101,9 @@ function Log-Rotate {
                 function Get-Block-Logs {
                     param ([object]$blockObject)
 
-                    if ($g_debugFlag -band 2) { Write-Debug "[BlockFactory][Get-Block-Logs] Verbose stream: $VerbosePreference" }
-                    if ($g_debugFlag -band 2) { Write-Debug "[BlockFactory][Get-Block-Logs] Debug stream: $DebugPreference" } 
-                    if ($g_debugFlag -band 2) { Write-Debug "[BlockFactory][Get-Block-Logs] Erroraction: $ErrorActionPreference" }
+                    if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Block-Logs] Verbose stream: $VerbosePreference" }
+                    if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Block-Logs] Debug stream: $DebugPreference" } 
+                    if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Block-Logs] Erroraction: $ErrorActionPreference" }
 
                     $blockpath = $blockObject['path']
                     $opt_tabooext = $blockObject['options']['tabooext']
@@ -2123,9 +2189,9 @@ function Log-Rotate {
         $BlockFactory | Add-Member -Name 'Create' -MemberType ScriptMethod -Value {
             param ([string]$FullConfig)
 
-            if ($g_debugFlag -band 2) { Write-Debug "[BlockFactory][Create] Verbose stream: $VerbosePreference" }
-            if ($g_debugFlag -band 2) { Write-Debug "[BlockFactory][Create] Debug stream: $DebugPreference" } 
-            if ($g_debugFlag -band 2) { Write-Debug "[BlockFactory][Create] Erroraction: $ErrorActionPreference" } 
+            if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Create] Verbose stream: $VerbosePreference" }
+            if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Create] Debug stream: $DebugPreference" } 
+            if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Create] Erroraction: $ErrorActionPreference" } 
 
             # Unpack my properties
             . $this.Constants
@@ -2134,17 +2200,17 @@ function Log-Rotate {
             . $this.PrivateHelperMethods
 
             # Parse Full Config for global options as hashtable
-            if ($g_debugFlag -band 2) { Write-Debug "[BlockFactory][Create][Getting global options]" }
+            if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Create][Getting global options]" }
             $globalconfig = $g_localconfigs_regex.Replace($FullConfig, '')
             Get-Options $globalconfig $this.GlobalOptions $g_globaloptions_allowed $g_globaloptions_allowed_regex $g_options_not_switches    
 
             # Parse Full Config for all found local block(s) path pattern, options, and matching log files, storing them as hashtable. Override the global options.
             # TODO: Regex for localconfigs to match paths on multiple lines before { }
-            if ($g_debugFlag -band 2) { Write-Debug "[BlockFactory][Create][Getting block options]" }
+            if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Create][Getting block options]" }
             $matches = $g_localconfigs_regex.Matches($FullConfig)
             foreach ($localconfig in $matches) {
-                # A block pattern should delimit multiple paths with a space
-                $my_path_pattern = ($localconfig.Groups[1].Value -Split ' ' | Where-Object { $_.Trim() }).Trim() -join " "
+                # A block pattern should delimit multiple paths with a single space
+                $my_path_pattern = ($localconfig.Groups[1].Value -Split ' ' | Where-Object { $_.Trim() }).Trim() -join ' '
                 if ($my_path_pattern -in $this.Blocks.Keys) {
                     Write-Verbose "CONFIG: WARNING - Duplicate path pattern $my_path_pattern . Only the latest entry will be used."
                 }
@@ -2180,9 +2246,9 @@ function Log-Rotate {
         $LogFactory | Add-Member -Name 'InitStatus' -MemberType ScriptMethod -Value {
             param ([string]$statusfile_fullname) 
 
-            if ($g_debugFlag -band 2) { Write-Debug "[LogFactory][Create] Verbose stream: $VerbosePreference" }
-            if ($g_debugFlag -band 2) { Write-Debug "[LogFactory][Create] Debug stream: $DebugPreference" } 
-            if ($g_debugFlag -band 2) { Write-Debug "[LogFactory][Create] Erroraction: $ErrorActionPreference" } 
+            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Verbose stream: $VerbosePreference" }
+            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Debug stream: $DebugPreference" } 
+            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Erroraction: $ErrorActionPreference" } 
 
             # If no status file is specified, we'll create one in the script directory called 'status'
             if (!$statusfile_fullname) {
@@ -2230,9 +2296,9 @@ function Log-Rotate {
         $LogFactory | Add-Member -Name 'Create' -MemberType ScriptMethod -Value {
             param ([System.IO.FileInfo]$logfile, [hashtable]$options)
 
-            if ($g_debugFlag -band 2) { Write-Debug "[LogFactory][Create] Verbose stream: $VerbosePreference" }
-            if ($g_debugFlag -band 2) { Write-Debug "[LogFactory][Create] Debug stream: $DebugPreference" } 
-            if ($g_debugFlag -band 2) { Write-Debug "[LogFactory][Create] Erroraction: $ErrorActionPreference" } 
+            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Verbose stream: $VerbosePreference" }
+            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Debug stream: $DebugPreference" } 
+            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Erroraction: $ErrorActionPreference" } 
 
             function Get-Status([System.IO.FileInfo]$file) {
                 $lastRotationDate = if ($this.Status.ContainsKey($file.FullName)) {
@@ -2256,9 +2322,9 @@ function Log-Rotate {
         }
         $LogFactory | Add-Member -Name 'DumpStatus' -MemberType ScriptMethod -Value {
 
-            if ($g_debugFlag -band 2) { Write-Debug "[LogFactory][DumpStatus] Verbose stream: $VerbosePreference" }
-            if ($g_debugFlag -band 2) { Write-Debug "[LogFactory][DumpStatus] Debug stream: $DebugPreference" } 
-            if ($g_debugFlag -band 2) { Write-Debug "[LogFactory][DumpStatus] Erroraction: $ErrorActionPreference" } 
+            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][DumpStatus] Verbose stream: $VerbosePreference" }
+            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][DumpStatus] Debug stream: $DebugPreference" } 
+            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][DumpStatus] Erroraction: $ErrorActionPreference" } 
 
             try {
                 # Update my state with each logs rotation status
@@ -2330,5 +2396,17 @@ function Log-Rotate {
 <# END MODULE #>
 
 # Entry point. 
+
+# Build our params
+$Debug = if ($Debug) { $true } else { $false }
+$Force = if ($Force) { $true } else { $false }
+$params = @{
+    'ConfigAsString' = $myConfig
+    'Force' = $Force
+    'Debug' = $Debug
+    'Verbose' = $true
+    'ErrorAction' = 'Stop'
+}
+
 # NOTE: Debug mode will not make any changes to logs. Verbose mode (Write-Verbose) is always on regardless of whether -verbose is used or not. 
-Log-Rotate -Verbose -ConfigAsString $myConfig -ErrorAction Stop
+Log-Rotate @params
