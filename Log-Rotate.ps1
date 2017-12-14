@@ -17,7 +17,7 @@ nocompress
 size 100k
 
 # Block options - Windows
-"C:\inetpub\logs\iis\mylogs\*.log" D:\console.log {
+"C:\inetpub\logs\iis\mylogs\*.log" {
     rotate 3650
     size 1M
     extension .log
@@ -2331,4 +2331,4 @@ function Log-Rotate {
 
 # Entry point. 
 # NOTE: Debug mode will not make any changes to logs. Verbose mode (Write-Verbose) is always on regardless of whether -verbose is used or not. 
-Log-Rotate -Verbose -ConfigAsString $myConfig -Force -ErrorAction Stop
+Log-Rotate -Verbose -ConfigAsString $myConfig -ErrorAction Stop
