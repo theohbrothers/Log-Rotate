@@ -194,24 +194,28 @@ A few less crucial options are left out for `Log-Rotate V1`. The option and thei
 | `shred`, `noshred`, `shredcycles` | This option is not supported yet, because of external dependencies on Windows - `sdelete`. 
 
 ## Additional Information
-### Options 
-The following discusses how to use certain options.
+### Configuration Options 
+The following discusses how to use certain config options.
 
 |  Option  | Examples | Explanation |
 |:--------:|----------|-------------|
 | `compresscmd` | `C:\Program Files\7-Zip\7z.exe`, `C:\Program Files\7-Zip\7z`, `7z.exe`, `7z`, `gzip` | Best to use a **full path**. If using aliases, ensure the binary is among the `PATH` environment variable |
 | `compressoptions` | `a -t7z`, ` ` | May be blank, in which case no parameters are sent along with`compresscmd` 
+
 ## FAQ 
 ### WinNT
-Q: Help! I am getting an error <code>'File C:\...Log-Rotate.ps1 cannot be loaded because the execution of scripts is disabled on this system. Please see "get-help about_signing" for more details.'</code>
+Q: Help! Upon running the script I am getting an error <code>'File C:\...Log-Rotate.ps1 cannot be loaded because the execution of scripts is disabled on this system. Please see "get-help about_signing" for more details.'</code>
+- You need to allow the execution of unverified scripts. Open Powershell as administrator, type <code>Set-ExecutionPolicy Unrestricted -Force</code> and press ENTER. Try running the script again. You can easily restore the security setting back by using <code>Set-ExecutionPolicy Undefined -Force</code>.
+
+Q: Help! Upon running the script I am getting an error <code>File C:\...Log-Rotate.ps1 cannot be loaded. The file C:\...\Log-Rotate.ps1 is not digitally signed. You cannot run this script on the current system. For more information about running scripts and setting execution policy, see about_Execution_Policies at http://go.microsoft.com/fwlink/?LinkID=135170.</code>
 - You need to allow the execution of unverified scripts. Open Powershell as administrator, type <code>Set-ExecutionPolicy Unrestricted -Force</code> and press ENTER. Try running the script again. You can easily restore the security setting back by using <code>Set-ExecutionPolicy Undefined -Force</code>.
 
 Q: Help! Upon running the script I am getting a warning <code>'Execution Policy change. The execution policy helps protect you from scripts that you do not trust. Changing the execution policy might expose you to the security risks described in the about_Execution_Policies help topic at http://go.microsoft.com/?LinkID=135170. Do you want to change the execution policy?</code>
 - You need to allow the execution of unverified scripts. Type <code>Y</code> for yes and press enter. You can easily restore the security setting back opening Powershell as administrator, and using the code <code>Set-ExecutionPolicy Undefined -Force</code>.
 
 ### *nix
-Q: I am getting an error `
-Powershell: command not found`
+Q: Help! I am getting an error `
+Powershell: command not found`.
 - `Powershell` is sometimes aliased as `pwsh`, depending on which *nix distro you are on. Try the alias `pwsh`.
 
 ## Known issues
