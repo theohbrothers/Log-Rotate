@@ -19,14 +19,14 @@ size 100k
 "C:\inetpub\logs\iis\mylogs\*.log" D:\console.log {
     rotate 3650
     size 1M
-	extension .log
-	compress
+    extension .log
+    compress
     compresscmd C:\Program Files\7-Zip\7z.exe
     compressoptions a -t7z
-	compressext .7z
+    compressext .7z
     dateext
-	delaycompress
-	minsize 1M
+    delaycompress
+    minsize 1M
     sharedscripts
     prerotate
         Write-Host "I am a script and my log file's full path is: $($Args[0]). I could email my log using Powershell"
@@ -2327,6 +2327,7 @@ function Log-Rotate {
         Write-Error "Stopped with errors. $(Get-Exception-Message $_)" -ErrorAction $CallerEA
     }
 }
+<# END MODULE #>
 
 # Entry point. 
 # NOTE: Debug mode will not make any changes to logs. Verbose mode (Write-Verbose) is always on regardless of whether -verbose is used or not. 
