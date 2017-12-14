@@ -775,10 +775,15 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
         # Rotate? ALL CONDITIONS BELOW
         $should_rotate = & {
 
-            # If forced, don't process any conditions, just rotate.
+            # If forced, no processing of rotation conditions needed. Go ahead and rotate.
             if ($force) {
                 return $true
             }
+
+            # If never rotated before, go ahead
+            #if (!$lastRotationDate) { 
+            #    return $true 
+            #}
 
             # Don't rotate if log file size is 0, and we specified to not rotate empty files.
             if (!$ifempty) {
@@ -788,11 +793,6 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
                     return $false
                 }
             }
-            
-            # If never rotated before, go ahead
-            #if (!$lastRotationDate) { 
-            #    return $true 
-            #}
 
             # Don't rotate if my size is smaller than size threshold
             if ($size) {
@@ -803,7 +803,8 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
                 }
             }
 
-            # Rotate only if we haven't already done so before as specified by daily / weekly / monthy / yearly options
+            # Don't rotate if we haven't met time thresholds by daily / weekly / monthy / yearly options. 
+            # If minsize specified along with time thresholds, don't rotate if either time or minsize thresholds are unmet.
             if ($daily -or $weekly -or $monthly -or $yearly) {
                 $time_interval_over = & {
                     $_now_dt = (Get-Date).ToLocalTime()
@@ -847,29 +848,33 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
                     $false
                 }
                 if ($time_interval_over) {
-                    # If minsize is specified, both time interval and minsize will be considered
+                    # If minsize is specified, both time and minsize thresholds will be considered
                     if ($minsize) {
                         $my_size = ($logfile | Measure-Object -Property Length -Sum -Average -Maximum -Minimum).Sum
                         Write-Verbose "my_size: $my_size"
                         if ($my_size -ge $minsize) {
-                            # minsize is over
+                            # Minsize threshold met
                             Write-Verbose "Will rotate log: $my_name. Time interval over, and minsize met. File's size ($my_size) is less than minsize ($minsize)"
                             return $true
                         }else {
+                            # Minsize threshold unmet
                             Write-Verbose "Will not rotate log: $my_name. Time interval over, but minsize not met. File's size ($my_size) is less than defined ($minsize)."
                             return $false
                         }
                     }else {
-                        # No minsize specified. Time interval over is all there is.
+                        # No minsize specified. Only time threshold met.
                     }
 
-                    # Time interval is over. Will rotate.
+                    # Time threshold met. Will rotate.
                     return $true
+                }else {
+                    # Haven't met time threshold. Don't rotate.
+                    return $false
                 }
             }
 
-            # False by default
-            $false
+            # True by default. No conditions stopped us from moving on.
+            $true
         }
 
         # Assign properties to the Log Object
@@ -2141,7 +2146,7 @@ function Log-Rotate {
         $LogFactory = [PSCustomObject]@{
             'LogObjects' = New-Object System.Collections.ArrayList
             'Status' = @{}
-            'StatusFile_FullName' = "$PSScriptRoot$([IO.Path]::DirectorySeparatorChar)status"
+            'StatusFile_FullName' = "$PSScriptRoot$([IO.Path]::DirectorySeparatorChar)Log-Rotate.status"
         }
         $LogFactory | Add-Member -Name 'InitStatus' -MemberType ScriptMethod -Value {
             param ([string]$statusfile_fullname) 
@@ -2166,10 +2171,24 @@ function Log-Rotate {
                     # Read status
                     $status = Get-Content $statusfile_fullname -Raw
                 }else {
+                    # Don't create new status file if debugging.
+                    if ($g_debugFlag) {
+                        return 
+                    }
+
                     try {
-                        [io.file]::OpenWrite($statusfile_fullname).close()
+                        #[io.file]::OpenWrite($statusfile_fullname).close()
+                        New-Item -Path $statusfile_fullname -ItemType File -Force -ErrorAction Stop 
+                        if (Test-Path $statusfile_fullname -PathType Leaf) {
+                            Write-Verbose "new status file created: $statusfile_fullname"
+
+                            # Store state file fullname
+                            $this.StatusFile_FullName = $statusfile_fullname
+                        }else {
+                            throw
+                        }
                     }catch {
-                        throw $_
+                        throw "Status file could not be created. $_"
                     }
                 }
             }

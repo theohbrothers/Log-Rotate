@@ -21,7 +21,7 @@ It can be used as a *Powershell Script* or *Module*.
 
 ## Who should use it?
 - Anyone working with `Windows` and have trouble with managing tones of log files from various applications
-- Anyone who works a lot in `Powershell` automation, and love the fact you can pipe configs a *module* that runs like a *binary*.
+- Anyone who works a lot in `Powershell` automation, and love the fact you can pipe configs to a *module* that runs like a *binary*.
 - Those who love the option of having *portable* log rotation scripts that follow the rotation logic of `logrotate`.
 - Anyone who wants to perform a *one-time rotation*, but doesn't like that `logrotate` only accepts configs as a file and not just a string.
 - Anyone on `Windows` who misses that `logrotate` on `*nix`
@@ -86,54 +86,71 @@ $config = @'
 }
 '@
 
+# Decide on a Log-Rotate state file that will be created by Log-Rotate
+$state = 'C:/Log-Rotate/Log-Rotate.status'
+
 # You can either Pipe the config
-$config | Log-Rotate -Verbose 
+$config | Log-Rotate -State $state -Verbose
 
 # Or use the full Command
-Log-Rotate -ConfigAsString $config -Verbose 
+Log-Rotate -ConfigAsString $config -State $state -Verbose 
 ```
 ### As a Task / Cron job
-This approach is just like how the original logrotate works. A *main config* includes a folder containing *other configs*.
+This approach is just like how the original logrotate works. A *main config* is to `include` a folder containing *all configs*.
 
 It requires you [install Log-Rotate as a module](#as-a-module).
 #### Windows
-Main config *C:\configs\logrotate.conf*, with a single `include` line :
+A Main config *C:\configs\Log-Rotate\Log-Rotate.conf*, with a single `include` line :
 ```
-include C:\configs\logrotate.d\
+include C:\configs\Log-Rotate.d\
 ```
-Config files in *C:\configs\logrotate.d\\* :
+Config files go in *C:\configs\Log-Rotate.d\\* :
 ```
 C:\configs\logrotate.d\
 +-- iis.conf
 +-- apache.conf
 +-- minecraftserver.conf
 ```
-Task command line:
+We'll decide to use a `Log-Rotate` *state* file in *C:\configs\Log-Rotate\Log-Rotate.status*. There's no need to create it; we just have specify it on the command line for `Log-Rotate` to create and use that *state* file.
 
+
+Run the Command line with the `-Debug` parameter to make sure everything is working.
 ```powershell
-Powershell 'Import-Module Log-Rotate; Log-Rotate -Config "C:\configs\logrotate.conf" -Verbose *>&1' 
+Powershell 'Import-Module Log-Rotate; Log-Rotate -Config "C:\configs\Log-Rotate\Log-Rotate.conf" -State "C:\configs\Log-Rotate\Log-Rotate.status" -Verbose -Debug *>&1' 
+```
+
+**Task Command line**
+```powershell
+Powershell 'Import-Module Log-Rotate; Log-Rotate -Config "C:\configs\Log-Rotate\Log-Rotate.conf" -State "C:\configs\Log-Rotate\Log-Rotate.status" -Verbose *>&1' 
 ```
 #### *nix
-> Note: *nix distros with `logrotate utility` pre-installed should already have the following environment set up. The following is just an example, but do use a different name for the main config and a different configs folder so that rotations don't clash with the original `logrotate utility`.
-
-Main config */etc/logrotate.conf*, with a single `include` line :
+A Main config */etc/Log-Rotate.conf*, with a single `include` line :
 ```
-include /etc/logrotate.d/
+include /etc/Log-Rotate.d/
 ```
-Config files in  */etc/logrotate.d/* :
+Config files in  */etc/Log-Rotate.d/* :
 ```
-/etc/logrotate.d/
+/etc/Log-Rotate.d/
 +-- nginx.conf
 +-- apache.conf
 +-- syslog.conf
 ```
-Cron command line
+We'll decide to use a `Log-Rotate` *state* file in */var/lib/Log-Rotate/Log-Rotate.status*. There's no need to create it; we just have specify it on the command line for `Log-Rotate` to create and use that *state* file.
+
+Run the Command line with the `-Debug` parameter to make sure everything is working.
 ```powershell
-Powershell 'Import-Module Log-Rotate; Log-Rotate -Config "/etc/logrotate.conf" -Verbose *>&1' 
+Powershell 'Import-Module Log-Rotate; Log-Rotate -Config "/etc/Log-Rotate.conf" -State "/var/lib/Log-Rotate/Log-Rotate.status" -Verbose -Debug'
 ```
+
+**Cron command line**
+```powershell
+Powershell 'Import-Module Log-Rotate; Log-Rotate -Config "/etc/Log-Rotate.conf" -State "/var/lib/Log-Rotate/Log-Rotate.status" -Verbose'
+```
+> Note that on certain distros, `Powershell` might be aliased as `pwsh`.
 
 ## Command Line
 The command line is kept exactly the same as the original logrotate utility, while adding an additional parameter called `ConfigAsString` that accepts pipeline input.
+
 ```powershell 
 Log-Rotate [[-ConfigAsString] <String>] [[-Config] <String[]>] [-Force] [-Help] [[-Mail] <String>] [[-State] <String>] [-Usage] [-Version] [<CommonParameters>]
 
@@ -174,15 +191,15 @@ PARAMETERS
         OutBuffer, PipelineVariable, and OutVariable. For more information, see
         about_CommonParameters (https:/go.microsoft.com/fwlink/?LinkID=113216).
 ```
-
 ## Capturing output
-Because of the piping nature of `Powershell`, the `stdout` is used for returning objects. To capture streams that output the script's progress, capture them with `*>&1` operator:
+Because of the piping nature of `Powershell`, the `stdout` is used for returning objects. 
+To capture streams that output the script's progress, use `*>&1` operator when calling `Log-Rotate` as a *module*, or `>` when calling `Log-Rotate` as a *script*.
 ```powershell
 # If using as a module
-Log-Rotate -ConfigAsString $myConfig -Verbose *>&1 | Out-File -FilePath ./output.log
+Log-Rotate -ConfigAsString $config -State $state -Verbose *>&1 | Out-File -FilePath ./output.log
 
 # If using as a script
-Powershell .\Log-Rotate.ps1 *>&1 > output.txt
+Powershell .\Log-Rotate.ps1 > output.log
 ```
 ## Missing options
 A few less crucial options are left out for `Log-Rotate V1`. The option and their reasons are stated below:
@@ -194,6 +211,10 @@ A few less crucial options are left out for `Log-Rotate V1`. The option and thei
 | `shred`, `noshred`, `shredcycles` | This option is not supported yet, because of external dependencies on Windows - `sdelete`. 
 
 ## Additional Information
+
+### Files
+By default, `Log-Rotate's` *state file* is created in the *script directory* called *Log-Rotate.status*.
+
 ### Configuration Options 
 The following discusses how to use certain config options.
 

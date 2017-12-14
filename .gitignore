@@ -1,3 +1,4 @@
 tests
+debug
 Create-Module.ps1
-status
+Log-Rotate.status
