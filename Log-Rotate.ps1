@@ -320,9 +320,9 @@ $LogObject = [PSCustomObject]@{
                     $SLASH = [IO.Path]::DirectorySeparatorChar
                     foreach ($i in @($max_index..0)) {
                         # Construct filenames with their index, and extension if provided
-                        # E.g. console.log.5 or console.log.5.7z
+                        # E.g. D:\console.log.5 or D:\console.log.5.7z
                         $source_fullName = "$my_previous_directory$SLASH$prefix.$i$extension$compressextension"
-                        # E.g. console.log.6 or console.log.6.7z
+                        # E.g. D:\console.log.6 or D:\console.log.6.7z
                         $destination_fullName = "$my_previous_directory$SLASH$prefix.$($i+1)$extension$compressextension"	
                 
                         # Rename old logs
@@ -399,8 +399,8 @@ $LogObject = [PSCustomObject]@{
         
             $compressed = $false
 
-            # E.g. 7z.exe a -t7z console.log.7z console.log
-            # E.g. gzip.exe console.log
+            # E.g. 7z.exe a -t7z D:\console.log.7z D:\console.log
+            # E.g. gzip.exe D:\console.log
             $compressoptions = $compressoptions.Split(' ') | Where-Object { $_.Trim() } 
             
             $params = if ($compresscmd -match '7z') {
@@ -477,8 +477,8 @@ $LogObject = [PSCustomObject]@{
         
             $uncompressed = $false
 
-            # E.g. Extract as a file: 7z.exe x -t7z console.log.7z
-            # E.g. Extract to stdout: 7z.exe x -so console.log.7z
+            # E.g. Extract as a file: 7z.exe x -t7z D:\console.log.7z
+            # E.g. Extract to stdout: 7z.exe x -so D:\console.log.7z
             $uncompressoptions = $uncompressoptions.Split(' ') | Where-Object { $_.Trim() } 
             $params = $uncompressoptions + $compressed_fullname
         
@@ -695,7 +695,7 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
         # If we're preserving extension (which can consist of multiple .), we need the stam of the filename.
         # E.g. 'console'. It's the same as $_.BaseName
         $my_stem =  if ($extension) {
-                        # E.g. '(.*)\.log' will capture 'console', when extension is 'log'
+                        # E.g. '(.*)\.log' will capture 'console', when extension is '.log'
                         $my_stem_regex = [Regex]"(.*)$( [Regex]::Escape($extension) )$"
                         $matches = $my_stem_regex.Match($my_name)
                         $matches.Groups[1].Value
@@ -795,8 +795,8 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
         }
         $my_previous_fullname = "$my_previous_directory$SLASH$my_previous_name"
         
-        # Determine to-be-rotated log's compressed file name, if we are going to
-        # E.g. 'console.log.1.7z'
+        # Determine the to-be-rotated log's compressed file name, if we are going to
+        # E.g. 'D:\console.log.1.7z'
         $my_previous_compressed_fullname =  if ($compress) { 
                                                 "$my_previous_fullname$compressext" 
                                             } else { 
@@ -804,6 +804,8 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
                                             }
 
         # Build prototype names
+        # E.g. 'console.log.1'
+        # E.g. 'console.log.1.7z'
         $my_previous_name_prototype = $my_previous_name
         $my_previous_compressed_name_prototype =    if ($compress) { 
                                                         "$my_previous_name$compressext" 
@@ -811,14 +813,14 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
 
         $my_index_regex = "\d{1,$( $rotate.ToString().Length )}";
         $my_previous_noncompressed_regex = if ($_preserve_extension) {
-                                                # E.g. '^console\-[0-9]{4}-[0-9]{2}-[0-9]{2}\.log$' or '^console\.\d{1,2,3}\.log$'
+                                                # E.g. '^console\-[0-9]{4}-[0-9]{2}-[0-9]{2}\.log$' or '^console\.\d{1,2}\.log$'
                                                 if ($dateext) {
                                                     "^$my_stem_regex$my_date_regex$extension_regex$"
                                                 }else {
                                                     "^$my_stem_regex\.$my_index_regex$extension_regex$"
                                                 }
                                             }else {
-                                                # E.g. '^console\.log\-[0-9]{4}-[0-9]{2}-[0-9]{2}$' or '^console\.log\.\d{1,2,3}$'
+                                                # E.g. '^console\.log\-[0-9]{4}-[0-9]{2}-[0-9]{2}$' or '^console\.log\.\d{1,2}$'
                                                 if ($dateext) {
                                                     "^$my_name_regex$my_date_regex$"
                                                 }else {
@@ -830,21 +832,21 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
 
         # The same as above, but with capture groups.
         $my_previous_noncompressed_captures_regex = if ($_preserve_extension) {
-                                                        # E.g. '^console\-[0-9]{4}-[0-9]{2}-[0-9]{2}\.log$' or '^console\.\d{1,2,3}\.log$'
+                                                        # E.g. '^(?<prefix>console)(?<suffix>\-[0-9]{4}-[0-9]{2}-[0-9]{2})(?<extension>\.log)$' or '^(?<prefix>console)\.(?<suffix>\d{1,2})(?<extension>\.log)$'
                                                         if ($dateext) {
                                                             "^(?<prefix>$my_stem_regex)(?<suffix>$my_date_regex)(?<extension>$extension_regex)$"
                                                         }else {
                                                             "^(?<prefix>$my_stem_regex)\.(?<suffix>$my_index_regex)(?<extension>$extension_regex)$"
                                                         }
                                                     }else {
-                                                        # E.g. '^console\.log\-[0-9]{4}-[0-9]{2}-[0-9]{2}$' or '^console\.log\.\d{1,2,3}$'
+                                                        # E.g. '^(?<prefix>console\.log)(?<suffix>\-[0-9]{4}-[0-9]{2}-[0-9]{2})$' or '^(?<prefix>console\.log)\.(?<suffix>\d{1,2})$'
                                                         if ($dateext) {
                                                             "^(?<prefix>$my_name_regex)(?<suffix>$my_date_regex)$"
                                                         }else {
                                                             "^(?<prefix>$my_name_regex)\.(?<suffix>$my_index_regex)$"
                                                         }
                                                     }
-        # E.g. '^console\.log\.\d{1,2}\.7z$' or '^console\.log\-[0-9]{4}-[0-9]{2}-[0-9]{2}\.7z$'
+        # E.g. '^(?<prefix>console\.log)\.(?<suffix>\d{1,2})(?<compressextension>\.7z)$' or '^(?<prefix>console\.log)(?<suffix>\-[0-9]{4}-[0-9]{2}-[0-9]{2})(?<compressextension>\.7z)$'
         $my_previous_compressed_captures_regex = ($my_previous_noncompressed_captures_regex -replace ".$") + "(?<compressextension>$( [Regex]::Escape($compressext) ))$"
 
         # Get all my existing files
@@ -856,24 +858,33 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
                             Get-ChildItem $my_previous_directory | Where-Object { $_.Name -match $my_previous_noncompressed_regex }
                         }
         
-        # The expired file name. Only used for non-date extension
+        # The expired file name. Only used for non-date extension.
         $my_expired_fullName =  if ($_preserve_extension) {
-                                if ($compress) {
-                                    "$my_previous_directory$SLASH$my_stem.$($start+$rotate)$extension$compressext"
+                                    if ($compress) {
+                                        # E.g. 'D:\console.6.log.7z'
+                                        "$my_previous_directory$SLASH$my_stem.$($start+$rotate)$extension$compressext"
+                                    }else {
+                                        # E.g. 'D:\console.6.log'
+                                        "$my_previous_directory$SLASH$my_stem.$($start+$rotate)$extension"
+                                    }
                                 }else {
-                                    "$my_previous_directory$SLASH$my_stem.$($start+$rotate)$extension"
+                                    if ($compress) {
+                                        # E.g. 'D:\console.log.6.7z'
+                                        "$my_previous_directory$SLASH$my_name.$($start+$rotate)$compressext"
+                                    }else {
+                                        # E.g. 'D:\console.log.6'
+                                        "$my_previous_directory$SLASH$my_name.$($start+$rotate)"
+                                    }
                                 }
-                            }else {
-                                if ($compress) {
-                                    "$my_previous_directory$SLASH$my_name.$($start+$rotate)$compressext"
-                                }else {
-                                    "$my_previous_directory$SLASH$my_name.$($start+$rotate)"
-                                }
-                            }
 
 
         # Rotate? ALL CONDITIONS BELOW
         $should_rotate = & {
+
+            # If forced, don't process any conditions, just rotate.
+            if ($force) {
+                return $true
+            }
 
             # Don't rotate if log file size is 0, and we specified to not rotate empty files.
             if (!$ifempty) {
@@ -882,11 +893,6 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
                     Write-Verbose "Will not rotate log: $my_name. File size is 0."
                     return $false
                 }
-            }
-
-            # If forced, don't process any conditions.
-            if ($force) {
-                return $true
             }
             
             # If never rotated before, go ahead
@@ -1316,6 +1322,7 @@ $LogObject | Add-Member -Name 'PostPostRotate' -MemberType ScriptMethod -Value {
                 Compress-File $my_previous_compressed_fullname $my_previous_fullname
             }else {
                 if ($rotate -gt 0) {
+                    # One log is non-compressed because it's delayed.
                     $keep_prev_compressed_count = $rotate - 1
                 }
             }
@@ -1331,8 +1338,7 @@ $LogObject | Add-Member -Name 'PostPostRotate' -MemberType ScriptMethod -Value {
 
         } # End if ($dateext)
 
-
-
+        
         $this.Status.postpostrotate = $true
 
     } # End if ($compress)
@@ -1621,7 +1627,7 @@ function Log-Rotate {
         # Validates options for the block, and instantiates any Log Objects.
         [CmdletBinding()]
         param (
-            # E.g. 'C:\'
+            # The Block object
             [Parameter(Mandatory=$True)]
             [object]$block,
     
