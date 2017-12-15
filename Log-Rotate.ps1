@@ -11,7 +11,7 @@ $myConfig = @'
 # BEGIN ADDING CONFIG HERE #
 ############################
 
-# If a directory is specified with a wildcard (*), all files within it are rotated. 
+# If a directory is specified with a wildcard (*), all files within it matching the wildcard are rotated. 
 # If a file is specified, that file will be rotated.
 # Separate log files/directories with spaces, all in single line before the bracer '{'
 # Use double-quotes (not single quotes) if path has spaces.
@@ -128,6 +128,7 @@ function Get-Size-Bytes {
     $size
 }
 function Get-Exception-Message ($ErrorRecord) {
+    # Recurses to get the innermost exception message
     function Get-InnerExceptionMessage ($Exception) {
         if ($Exception.InnerException) {
             Get-InnerExceptionMessage $Exception.InnerException
@@ -169,6 +170,8 @@ function Start-Script {
             Write-Verbose "Running script with arg $file_FullName : `n$script"
             $OS = $ENV:OS
             if ($OS -eq "Windows_NT") {
+                # E.g. & Powershell -Command { echo $Args[0] } -Args @('D:/console.log')
+
                 # & operator: When we use & $cmd $param, powershell wraps args containing spaces with double-quotes, so we need escape inner double-quotes
                 $cmd =  if ( Get-Command 'powershell' -ErrorAction SilentlyContinue ) {
                             "powershell"
@@ -189,9 +192,7 @@ function Start-Script {
                 # TODO: Not using jobs for now, because they are slow.
                 #$script = "sh -c '$script' `$args[0]"
             }
-       
-            #
-           
+
             Write-Verbose "Script output: `n$output"
 
             # TODO: Not using jobs for now, because they are slow.
@@ -1390,17 +1391,21 @@ function Log-Rotate {
     Prints Usage information .
     
     .EXAMPLE
-    Log-Rotate -Debug -Config 'C:\configs\'
+    Log-Rotate -ConfigAsString $config -State $state -Verbose 
 
     .EXAMPLE
-    Log-Rotate -Debug -Config '/etc/Log-Rotate/configs/' -State '/var/lib/Log-Rotate/status'
+    Log-Rotate "/etc/Log-Rotate.conf" -State "/var/lib/Log-Rotate/Log-Rotate.status" -Verbose 
+
+    .EXAMPLE
+    Log-Rotate "/etc/configs/" -Verbose 
 
     .LINK
+    https://github.com/leojonathanoh/Log-Rotate
 
     .NOTES
     *logrotate manual: https://linux.die.net/man/8/logrotate
     
-    The command line is identical to the actual logrotate utility, if aliases are used. If using full parameters, only optional (-mail, -state) and miscellaneous (-usage, -help) parameters use one instead of two dashes. (i.e. -mail instead of --mail)
+    The command line is identical to the actual logrotate utility, if parameter aliases are used. If using full parameters, only optional (-mail, -state) and miscellaneous (-usage, -help) parameters use one instead of two dashes. (i.e. -mail instead of --mail)
     For help on command line options, use:
         Get-Help Log-Rotate -detailed
 
@@ -1959,7 +1964,7 @@ function Log-Rotate {
             # Pipelined string. Keep going
             $MultipleConfig = $ConfigAsString
         }else {
-            # No pipeline string. From this point on $Config has to be a path to the config file, or directory containing config files.
+            # No pipeline string. From this point on $Config has to be an array of: a path to a config file, or directory containing config files.
             try {
                 $MultipleConfig = ''
                 $Config | ForEach-Object {

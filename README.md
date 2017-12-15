@@ -192,7 +192,7 @@ PARAMETERS
         about_CommonParameters (https:/go.microsoft.com/fwlink/?LinkID=113216).
 ```
 ## Capturing output
-Because of the piping nature of `Powershell`, the `stdout` is used for returning objects. 
+Because of the pipelining nature of `Powershell`, the `stdout` is used for returning objects. 
 To capture streams that output the script's progress, use `*>&1` operator when calling `Log-Rotate` as a *module*, or `>` when calling `Log-Rotate` as a *script*.
 ```powershell
 # If using as a module
@@ -213,7 +213,7 @@ A few less crucial options are left out for `Log-Rotate V1`. The option and thei
 ## Additional Information
 
 ### Files
-By default, `Log-Rotate's` *state file* is created in the *script directory* called *Log-Rotate.status*.
+Unless specified on the command line, by default `Log-Rotate's` *state file* is created in the *script directory* called *Log-Rotate.status*.
 
 ### Configuration Options 
 The following discusses how to use certain config options.
