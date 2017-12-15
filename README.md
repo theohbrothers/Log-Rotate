@@ -20,7 +20,7 @@ It can be used as a *Powershell Script* or *Module*.
 - A **Powershell script** means great portability and flexibility of deployment to isolated environments
 
 ## Who should use it?
-- Anyone working with `Windows` and have trouble with managing tones of log files from various applications
+- Anyone working with `Windows` and have trouble with managing tons of log files from various applications
 - Anyone who works a lot in `Powershell` automation, and love the fact you can pipe configs to a *module* that runs like a *binary*.
 - Those who love the option of having *portable* log rotation scripts that follow the rotation logic of `logrotate`.
 - Anyone who wants to perform a *one-time rotation*, but doesn't like that `logrotate` only accepts configs as a file and not just a string.

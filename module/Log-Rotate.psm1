@@ -808,6 +808,11 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
             # If minsize specified along with time thresholds, don't rotate if either time or minsize thresholds are unmet.
             if ($daily -or $weekly -or $monthly -or $yearly) {
                 $time_interval_over = & {
+                    # If it's our first time, considered to have met the time threshold
+                    if (!$lastRotationDate) {
+                        return $true
+                    }
+                    
                     $_now_dt = (Get-Date).ToLocalTime()
                     # Not using CreationTime, but using state file now.
                     #$_my_newest_file = $my_prevfiles | Sort-Object -Property CreationTime -Descending | Select-Object -First 1
@@ -1299,7 +1304,7 @@ function Log-Rotate {
     .NOTES
     *logrotate manual: https://linux.die.net/man/8/logrotate
     
-    The command line is identical to the actual logrotate utility, if paraneter aliases are used. If using full parameters, only optional (-mail, -state) and miscellaneous (-usage, -help) parameters use one instead of two dashes. (i.e. -mail instead of --mail)
+    The command line is identical to the actual logrotate utility, if parameter aliases are used. If using full parameters, only optional (-mail, -state) and miscellaneous (-usage, -help) parameters use one instead of two dashes. (i.e. -mail instead of --mail)
     For help on command line options, use:
         Get-Help Log-Rotate -detailed
 
@@ -2183,7 +2188,7 @@ function Log-Rotate {
 
                     try {
                         #[io.file]::OpenWrite($statusfile_fullname).close()
-                        New-Item -Path $statusfile_fullname -ItemType File -Force -ErrorAction Stop 
+                        New-Item -Path $statusfile_fullname -ItemType File -Force -ErrorAction Stop | Out-Null
                         if (Test-Path $statusfile_fullname -PathType Leaf) {
                             Write-Verbose "new status file created: $statusfile_fullname"
 
