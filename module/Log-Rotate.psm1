@@ -53,6 +53,7 @@ function Start-Script {
     )
 
     begin {
+        # Save the caller's ErrorAction
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
         if ($g_debugFlag -band 4) { Write-Verbose "[Start-Script] callerEA: $callerEA" }
@@ -63,44 +64,46 @@ function Start-Script {
         try {
             Write-Verbose "Running script with arg $file_FullName : `n$script"
             $OS = $ENV:OS
-            if ($OS -eq "Windows_NT") {
-                # E.g. & Powershell -Command { echo $Args[0] } -Args @('D:/console.log')
+            if (!$g_debugFlag) {
+                if ($OS -eq "Windows_NT") {
+                    # E.g. & Powershell -Command { echo $Args[0] } -Args @('D:/console.log')
 
-                # & operator: When we use & $cmd $param, powershell wraps args containing spaces with double-quotes, so we need escape inner double-quotes
-                $cmd =  if ( Get-Command 'powershell' -ErrorAction SilentlyContinue ) {
-                            "powershell"
-                        }elseif ( Get-Command 'pwsh' -ErrorAction SilentlyContinue ) {
-                            "pwsh"
-                        }
-                $scriptblock = [scriptblock]::Create($script)
-                #$params = '-Command', $scriptblock, '-Args', @($file_FullName)
-                $output = & $cmd -Command $scriptblock -Args @($file_FullName)
-            }else {
-                # E.g. sh -c 'echo ${0}' 'D:\console.log'
-                
-                # & operator: When we use & $cmd $param, powershell wraps args containing spaces with double-quotes, so we need escape inner double-quotes
-                $cmd = 'sh'
-                $params = '-c', $script.Replace('"', '\"'), $file_FullName
-                $output = & $cmd $params
+                    # & operator: When we use & $cmd $param, powershell wraps args containing spaces with double-quotes, so we need escape inner double-quotes
+                    $cmd =  if ( Get-Command 'powershell' -ErrorAction SilentlyContinue ) {
+                                "powershell"
+                            }elseif ( Get-Command 'pwsh' -ErrorAction SilentlyContinue ) {
+                                "pwsh"
+                            }
+                    $scriptblock = [scriptblock]::Create($script)
+                    #$params = '-Command', $scriptblock, '-Args', @($file_FullName)
+                    $output = & $cmd -Command $scriptblock -Args @($file_FullName)
+                }else {
+                    # E.g. sh -c 'echo ${0}' 'D:\console.log'
+                    
+                    # & operator: When we use & $cmd $param, powershell wraps args containing spaces with double-quotes, so we need escape inner double-quotes
+                    $cmd = 'sh'
+                    $params = '-c', $script.Replace('"', '\"'), $file_FullName
+                    $output = & $cmd $params
+
+                    # TODO: Not using jobs for now, because they are slow.
+                    #$script = "sh -c '$script' `$args[0]"
+                }
+
+                Write-Verbose "Script output: `n$output"
 
                 # TODO: Not using jobs for now, because they are slow.
-                #$script = "sh -c '$script' `$args[0]"
+                <#  
+                $scriptblock = [Scriptblock]::Create($script)
+                $output = & $scriptblock $file_FullName
+                $job = Start-Job -ScriptBlock $scriptblock -ArgumentList $file_FullName -ErrorAction Stop
+                $output = Receive-Job -Job $job -Wait -ErrorAction Stop
+                if ($job.State -eq 'Failed') {
+                    throw
+                }else {
+                    Write-Verbose "Script output: `n$output"
+                }
+                #>
             }
-
-            Write-Verbose "Script output: `n$output"
-
-            # TODO: Not using jobs for now, because they are slow.
-            <#  
-            $scriptblock = [Scriptblock]::Create($script)
-            $output = & $scriptblock $file_FullName
-            $job = Start-Job -ScriptBlock $scriptblock -ArgumentList $file_FullName -ErrorAction Stop
-            $output = Receive-Job -Job $job -Wait -ErrorAction Stop
-            if ($job.State -eq 'Failed') {
-                throw
-            }else {
-                Write-Verbose "Script output: `n$output"
-            }
-            #>
         }catch {
             Write-Error "Failed to execute script for $file_FullName. `nError: $_ `nScript (possibly with errors): $script" -ErrorAction $callerEA
         }
@@ -454,9 +457,7 @@ $LogObject = [PSCustomObject]@{
                 if ($preremove) {
                     Write-Verbose "Running preremove script"
                     try {
-                        if (!$g_debugFlag) {
-                            Start-Script $preremove $file_fullname -ErrorAction Continue
-                        }
+                        Start-Script $preremove $file_fullname -ErrorAction Continue
                     }catch {
                         throw "Failed to run preremove script. $(Get-Exception-Message $_)" 
                     }
@@ -1103,9 +1104,7 @@ $LogObject | Add-Member -Name 'Prerotate' -MemberType ScriptMethod -Value {
     if ($prerotate) {
         Write-Verbose "Running prerotate script"
         try {
-            if (!$g_debugFlag) {
-                Start-Script $prerotate $my_fullname -ErrorAction Stop
-            }
+            Start-Script $prerotate $my_fullname -ErrorAction Stop
         }catch {
             throw "Failed to run prerotate script. $(Get-Exception-Message $_)" 
         }
@@ -1147,9 +1146,7 @@ $LogObject | Add-Member -Name 'Postrotate' -MemberType ScriptMethod -Value {
     if ($postrotate) {
         Write-Verbose "Running postrotate script"
         try {
-            if (!$g_debugFlag) {
-                Start-Script $postrotate $my_fullname -ErrorAction Stop
-            }
+            Start-Script $postrotate $my_fullname -ErrorAction Stop
         }catch {
             throw "Failed to run postrotate script. $(Get-Exception-Message $_)" 
         }
@@ -1737,9 +1734,7 @@ function Log-Rotate {
                         if ($firstaction) {
                             try {
                                 Write-Verbose "Running firstaction script"
-                                if (!$g_debugFlag) {
-                                    Start-Script $firstaction $blockpath -ErrorAction Stop
-                                } 
+                                Start-Script $firstaction $blockpath -ErrorAction Stop
                             }catch {
                                 Write-Error "Failed to run firstaction script for $blockpath because $(Get-Exception-Message $_)" -ErrorAction Stop
                             }
@@ -1762,9 +1757,7 @@ function Log-Rotate {
                             if ( $prerotate -and ($false -notin $_logsToRotate.status.preprerotate) ) {
                                 try {
                                     Write-Verbose "Running shared prerotate script"
-                                    if (!$g_debugFlag) {
-                                        Start-Script $prerotate $blockpath -ErrorAction Stop
-                                    }
+                                    Start-Script $prerotate $blockpath -ErrorAction Stop
                                 }catch {
                                     Write-Error "Failed to run shared prerotate script for $blockpath. $(Get-Exception-Message $_)" -ErrorAction Stop
                                 }
@@ -1784,9 +1777,7 @@ function Log-Rotate {
                             if ( $postrotate -and ($false -notin $_logsToRotate.status.rotate) ) {
                                 try {
                                     Write-Verbose "Running shared postrotate script"
-                                    if (!$g_debugFlag) {
-                                        Start-Script $postrotate $blockpath -ErrorAction Stop
-                                    }
+                                    Start-Script $postrotate $blockpath -ErrorAction Stop
                                 }catch {
                                     Write-Error "Failed to run shared postrotate script for $blockpath. $(Get-Exception-Message $_)" -ErrorAction Stop
                                 }
@@ -1820,9 +1811,7 @@ function Log-Rotate {
                         if ($lastaction) { 
                             try {
                                 Write-Verbose "Running lastaction script" -ErrorAction Stop
-                                if (!$g_debugFlag) {
-                                    Start-Script $lastaction $blockpath -ErrorAction Stop
-                                }
+                                Start-Script $lastaction $blockpath -ErrorAction Stop
                             }catch {
                                 Write-Error "Failed to run lastaction script for $blockpath. $(Get-Exception-Message $_)" -ErrorAction Stop
                             }
@@ -1903,13 +1892,13 @@ function Log-Rotate {
             'Constants' = [scriptblock]{
                 # Constants
                 $g_globaloptions_allowed_str = 'compress,compresscmd,uncompresscmd,compressext,compressoptions,uncompressoptions,copy,copytruncate,create,daily,dateext,dateformat,delaycompress,extension,ifempty,mail,mailfirst,maillast,maxage,minsize,missingok,monthly,nocompress,nocopy,nocopytruncate,nocreate,nodelaycompress,nodateext,nomail,nomissing,noolddir,nosharedscripts,noshred,notifempty,olddir,rotate,size,sharedscripts,shred,shredcycle,start,tabooext,weekly,yearly'
-                $g_options_localonly_str = 'postrotate,prerotate,firstaction,lastaction,preremove';
+                $g_options_not_singleline_str = 'postrotate,prerotate,firstaction,lastaction,preremove';
                 $g_options_not_switches_str = 'compresscmd,uncompresscmd,compressext,compressoptions,uncompressoptions,create,dateformat,extension,include,mail,maxage,minsize,olddir,postrotate,prerotate,firstaction,lastaction,preremove,rotate,size,shredcycle,start,tabooext'
 
                 # Constants as arrays
                 [string[]]$g_globaloptions_allowed = $g_globaloptions_allowed_str.Split(',')
-                [string[]]$g_options_localonly = $g_options_localonly_str.Split(',');
-                [string[]]$g_localoptions_allowed = $g_globaloptions_allowed + $g_options_localonly
+                [string[]]$g_options_not_singleline = $g_options_not_singleline_str.Split(',');
+                [string[]]$g_localoptions_allowed = $g_globaloptions_allowed + $g_options_not_singleline
                 [string[]]$g_options_not_switches = $g_options_not_switches_str.Split(',')
 
                 # Define our config-capturing regexes
@@ -1949,7 +1938,7 @@ function Log-Rotate {
             }
             'Blocks' = [ordered]@{}
             'UniqueLogFileNames' = New-Object System.Collections.ArrayList
-            'PrivateHelperMethods' = [scriptblock]{
+            'PrivateMethods' = [scriptblock]{
                 function Get-Options {
                     param (
                         [string]$configString,
@@ -1978,7 +1967,12 @@ function Log-Rotate {
                         if ($key) {
                             if ($options_allowed.Contains($key)) {
                                 $options_found[$key] = if ($options_not_switches.Contains($key)) { 
-                                                                $value.Trim() 
+                                                            # Don't trim if it's an option with a multiline value
+                                                            if (!$g_options_not_singleline.Contains($key)) {
+                                                                $value.Trim()
+                                                            }else {
+                                                                $value
+                                                            }
                                                         } else { $true }
                             }
                         }
@@ -2112,7 +2106,7 @@ function Log-Rotate {
             . $this.Constants
 
             # Unpack my methods
-            . $this.PrivateHelperMethods
+            . $this.PrivateMethods
 
             # Parse Full Config for global options as hashtable
             if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Create][Getting global options]" }
@@ -2165,7 +2159,7 @@ function Log-Rotate {
             if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Debug stream: $DebugPreference" } 
             if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Erroraction: $ErrorActionPreference" } 
 
-            # If no status file is specified, we'll create one in the script directory called 'status'
+            # If no status file is specified, we'll create one in the script directory called 'Log-Rotate.status'
             if (!$statusfile_fullname) {
                 $statusfile_fullname = $this.StatusFile_FullName
             }
@@ -2181,21 +2175,20 @@ function Log-Rotate {
                     # Read status
                     $status = Get-Content $statusfile_fullname -Raw
                 }else {
-                    # Don't create new status file if debugging.
-                    if ($g_debugFlag) {
-                        return 
-                    }
-
                     try {
-                        #[io.file]::OpenWrite($statusfile_fullname).close()
-                        New-Item -Path $statusfile_fullname -ItemType File -Force -ErrorAction Stop | Out-Null
-                        if (Test-Path $statusfile_fullname -PathType Leaf) {
+                        if (!$g_debugFlag) {
+                            #[io.file]::OpenWrite($statusfile_fullname).close()
+                            New-Item -Path $statusfile_fullname -ItemType File -Force -ErrorAction Stop | Out-Null
+                            if (Test-Path $statusfile_fullname -PathType Leaf) {
+                                Write-Verbose "new status file created: $statusfile_fullname"
+    
+                                # Store state file fullname
+                                $this.StatusFile_FullName = $statusfile_fullname
+                            }else {
+                                throw
+                            }
+                        }else{
                             Write-Verbose "new status file created: $statusfile_fullname"
-
-                            # Store state file fullname
-                            $this.StatusFile_FullName = $statusfile_fullname
-                        }else {
-                            throw
                         }
                     }catch {
                         throw "Status file could not be created. $_"
@@ -2256,31 +2249,34 @@ function Log-Rotate {
             if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][DumpStatus] Erroraction: $ErrorActionPreference" } 
 
             try {
-                # Update my state with each logs rotation status
-                $this.GetAll() | Where-Object { $_.Status['rotation_datetime'] } | ForEach-Object {
-                    $rotationDateISO = $_.Status['rotation_datetime'].ToString('s')
-                    $lastRotationDateISO =  if ($this.Status.ContainsKey($_.Logfile.FullName)) {
-                                                $this.Status[$_.Logfile.FullName]
-                                            } else { 
-                                                '' 
-                                            }
-                    if ( !$lastRotationDateISO -or ($rotationDateISO -gt $lastRotationDateISO) ) {
-                        Write-Verbose "Updating status of rotation for log $($_.Logfile.FullName) "
-                        $this.Status[$_.Logfile.FullName] = $rotationDateISO
+                if (!$g_debugFlag) {
+                    # Update my state with each logs rotation status
+                    $this.GetAll() | Where-Object { $_.Status['rotation_datetime'] } | ForEach-Object {
+                        $rotationDateISO = $_.Status['rotation_datetime'].ToString('s')
+                        $lastRotationDateISO =  if ($this.Status.ContainsKey($_.Logfile.FullName)) {
+                                                    $this.Status[$_.Logfile.FullName]
+                                                } else { 
+                                                    '' 
+                                                }
+                        if ( !$lastRotationDateISO -or ($rotationDateISO -gt $lastRotationDateISO) ) {
+                            Write-Verbose "Updating status of rotation for log $($_.Logfile.FullName) "
+                            $this.Status[$_.Logfile.FullName] = $rotationDateISO
+                        }else {
+                            Write-Verbose "Not updating status of rotation for log $($_.Logfile.FullName) "
+                        }
                     }
-                    else {
-                        Write-Verbose "Not updating status of rotation for log $($_.Logfile.FullName) "
+                
+                    # Dump state file
+                    Write-Verbose "Writing status file to $($this.StatusFile_FullName)"
+                    $output = "Log-Rotate state - version 1"
+                    $this.Status.Keys | ForEach-Object {
+                        $output += "`n`"$_`" $($this.Status[$_])"
                     }
-                    
+                    $output | Out-File $this.StatusFile_FullName -Encoding utf8
+                }else {
+                    # Dump state file
+                    Write-Verbose "Writing status file to $($this.StatusFile_FullName)"
                 }
-            
-                # Dump state file
-                Write-Verbose "Writing status file to $($this.StatusFile_FullName)"
-                $output = "Log-Rotate state - version 1"
-                $this.Status.Keys | ForEach-Object {
-                    $output += "`n`"$_`" $($this.Status[$_])"
-                }
-                $output | Out-File $this.StatusFile_FullName -Encoding utf8    
             }catch {
                 throw "Failed to write state file! Reason: $(Get-Exception-Message $_)"
             }
@@ -2315,9 +2311,7 @@ function Log-Rotate {
         }
 
         # Finish up with dumping status
-        if (!$g_debugFlag) {
-            $LogFactory.DumpStatus()
-        }
+        $LogFactory.DumpStatus()
     }catch {
         Write-Error "Stopped with errors. $(Get-Exception-Message $_)" -ErrorAction $CallerEA
     }
