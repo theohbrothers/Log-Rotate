@@ -1486,7 +1486,7 @@ function Log-Rotate {
         [Regex]$scripts_content_regex = '\n[^\S\n]*\b(?:postrotate|prerotate|firstaction|lastaction|preremove)[^\n]*\n((?:.|\s)*?)\n.*\b(endscript)\b'
         $FullConfig = $scripts_content_regex.Replace($FullConfig, '')
 
-        # Find matching bracer. If we end up without a '}', we'll throw an error
+        # Validate block path pattern definition. And find matching bracer.
         $lines = $FullConfig.split("`n")
         $line_number = 0
         $bracer_to_find = '{'
@@ -1497,6 +1497,19 @@ function Log-Rotate {
             $line_number++
             $level = 0
             
+
+            # Validate block definition
+            [Regex]$block_path_pattern_line = "(.*)({)"
+            $matches = $block_path_pattern_line.Matches($line)
+            if ($matches.success) {
+                # The path pattern cannot be empty
+                $path_pattern = $matches.Groups[1].Value.Trim()
+                if (!$path_pattern) {
+                    $dump = Get-LinesAround $lines $line_number | Out-String
+                    throw "CONFIG: WARNING: Empty path pattern disallowed allowed at line $line_number, marked by NEAR HERE --------> : `n$dump"
+                }
+            }
+
             [Regex]$bracers_regex = "([{}])"
             $matches = $bracers_regex.Matches($line)
             if ($matches.success) {
@@ -1952,28 +1965,30 @@ function Log-Rotate {
                     if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Options] Erroraction: $ErrorActionPreference" }
             
                     $matches = $options_allowed_regex.Matches($configString)
-                    $matches | ForEach-Object {
-                        # Get key and value
-                        $match = $_
-                        $key = if ($match.Groups[1].Value) { $match.Groups[1].Value } else { $match.Groups[3].Value }
-                        $value = if ($match.Groups[2].Value) { $match.Groups[2].Value } else { $match.Groups[4].Value }
-            
-                        #Write-Verbose "`nLine: $line"
-                        #Write-Verbose "key: $key"
-                        #Write-Verbose "value: $value"
-                        #Write-Verbose "Contains: $($options_allowed.Contains($key))"
-            
-                        # Store this option to hashtable. If there are duplicate options, later override earlier ones.
-                        if ($key) {
-                            if ($options_allowed.Contains($key)) {
-                                $options_found[$key] = if ($options_not_switches.Contains($key)) { 
-                                                            # Don't trim if it's an option with a multiline value
-                                                            if (!$g_options_not_singleline.Contains($key)) {
-                                                                $value.Trim()
-                                                            }else {
-                                                                $value
-                                                            }
-                                                        } else { $true }
+                    if ($matches.success) {
+                        $matches | ForEach-Object {
+                            # Get key and value
+                            $match = $_
+                            $key = if ($match.Groups[1].Value) { $match.Groups[1].Value } else { $match.Groups[3].Value }
+                            $value = if ($match.Groups[2].Value) { $match.Groups[2].Value } else { $match.Groups[4].Value }
+                
+                            #Write-Verbose "`nLine: $line"
+                            #Write-Verbose "key: $key"
+                            #Write-Verbose "value: $value"
+                            #Write-Verbose "Contains: $($options_allowed.Contains($key))"
+                
+                            # Store this option to hashtable. If there are duplicate options, later override earlier ones.
+                            if ($key) {
+                                if ($options_allowed.Contains($key)) {
+                                    $options_found[$key] = if ($options_not_switches.Contains($key)) { 
+                                                                # Don't trim if it's an option with a multiline value
+                                                                if (!$g_options_not_singleline.Contains($key)) {
+                                                                    $value.Trim()
+                                                                }else {
+                                                                    $value
+                                                                }
+                                                            } else { $true }
+                                }
                             }
                         }
                     }
@@ -2014,13 +2029,13 @@ function Log-Rotate {
                     if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Block-Logs] Debug stream: $DebugPreference" } 
                     if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Block-Logs] Erroraction: $ErrorActionPreference" }
 
-                    $blockpath = $blockObject['path']
-                    $opt_tabooext = $blockObject['options']['tabooext']
-                    $opt_missingok = if ($blockObject['options']['notmissingok']) { $false } else { $blockObject['options']['missingok'] }
+                    $blockpath = $blockObject['Path']
+                    $opt_tabooext = $blockObject['Options']['tabooext']
+                    $opt_missingok = if ($blockObject['Options']['notmissingok']) { $false } else { $blockObject['Options']['missingok'] }
 
                     # Split the blockpath pattern by spaces, to get either 1) log paths or 2) wildcarded-paths
                     $logpaths = [System.Collections.Arraylist]@()
-                    $matches = [Regex]::Matches($blockpath, '"([^"]+)"|([^ ]+)')
+                    $matches = [Regex]::Matches($blockpath, '"([^"]+)"|([^\s]+)')
                     if ($matches.success) {
                         $matches | ForEach-Object {
                             $path = if ($_.Groups[1].Value.Trim()) {
@@ -2117,26 +2132,32 @@ function Log-Rotate {
             # TODO: Regex for localconfigs to match paths on multiple lines before { }
             if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Create][Getting block options]" }
             $matches = $g_localconfigs_regex.Matches($FullConfig)
-            foreach ($localconfig in $matches) {
-                # A block pattern should delimit multiple paths with a single space
-                $my_path_pattern = ($localconfig.Groups[1].Value -Split ' ' | Where-Object { $_.Trim() }).Trim() -join ' '
-                if ($my_path_pattern -in $this.Blocks.Keys) {
-                    Write-Verbose "CONFIG: WARNING - Duplicate path pattern $my_path_pattern . Only the latest entry will be used."
+            if ($matches.success) {
+                foreach ($localconfig in $matches) {
+                    # NOTE: NOT USED ANYMORE: A block pattern should delimit multiple paths with a single space
+                    #$my_path_pattern = ($localconfig.Groups[1].Value -Split ' ' | Where-Object { $_.Trim() }).Trim() -join ' '
+                    # Just get the raw path pattern
+                    $my_path_pattern = $localconfig.Groups[1].Value.Trim()
+                    if ($my_path_pattern -in $this.Blocks.Keys) {
+                        Write-Verbose "CONFIG: WARNING - Duplicate path pattern $my_path_pattern . Only the latest entry will be used."
+                    }
+                    # Any duplicate block path pattern overrides the previous
+                    $this.Blocks[$my_path_pattern] = @{
+                        'Path' = $my_path_pattern
+                        'Options' = @{}
+                        'LocalOptions' = @{}
+                        'LogFiles' = ''
+                    }
+                    try {
+                        Get-Options $localconfig.Groups[2].Value $this.Blocks[$my_path_pattern]['LocalOptions'] $g_localoptions_allowed $g_localoptions_allowed_regex $g_options_not_switches
+                        $this.Blocks[$my_path_pattern]['Options'] = Override-Options $this.Blocks[$my_path_pattern]['LocalOptions'] $this.GlobalOptions
+                        $this.Blocks[$my_path_pattern]['LogFiles'] = Get-Block-Logs $this.Blocks[$my_path_pattern] $this.UniqueLogFileNames
+                    } catch {
+                        Write-Error "$(Get-Exception-Message($_))" -ErrorAction Continue
+                    }
                 }
-                # Any duplicate block path pattern overrides the previous
-                $this.Blocks[$my_path_pattern] = @{
-                    'Path' = $my_path_pattern
-                    'Options' = @{}
-                    'LocalOptions' = @{}
-                    'LogFiles' = ''
-                }
-                try {
-                    Get-Options $localconfig.Groups[2].Value $this.Blocks[$my_path_pattern]['LocalOptions'] $g_localoptions_allowed $g_localoptions_allowed_regex $g_options_not_switches
-                    $this.Blocks[$my_path_pattern]['Options'] = Override-Options $this.Blocks[$my_path_pattern]['LocalOptions'] $this.GlobalOptions
-                    $this.Blocks[$my_path_pattern]['LogFiles'] = Get-Block-Logs $this.Blocks[$my_path_pattern] $this.UniqueLogFileNames
-                } catch {
-                    Write-Error "$(Get-Exception-Message($_))" -ErrorAction Continue
-                }
+            }else {
+                Write-Verbose "CONFIG: WARNING - No configuration blocks were found."
             }
         }
         $BlockFactory | Add-Member -Name 'GetAll' -MemberType ScriptMethod -Value {
