@@ -178,7 +178,10 @@ PARAMETERS
         Tells logrotate which command to use when mailing logs.
 
     -State <String>
-        The full path to a Log-Rotate state file to use for previously rotated Logs. The default location of the state file is within Log-Rotate's containing directory.
+        The path to a Log-Rotate state file to use for previously rotated Logs. May be absolute or relative.
+        If no state file is provided, by default the location of the state file (named 'Log-Rotate.state') will be the calling script's directory.
+        If a relative path is provided, the state file path will be resolved to the current working directory.
+        If a tilde ('~') is used at the beginning of the path, the state file path will be resolved to the user's home directory.
 
     -Usage [<SwitchParameter>]
         Prints Usage information .
@@ -213,7 +216,9 @@ A few less crucial options are left out for `Log-Rotate V1`. The option and thei
 ## Additional Information
 
 ### Files
-Unless specified on the command line, by default `Log-Rotate's` *state file* is created in the *script directory* called *Log-Rotate.status*.
+When `Log-Rotate` is used as a **Script**, if the state file is unspecified on the command line, by default a `Log-Rotate` state file named *Log-Rotate.status* is created in the *script directory*.
+
+When `Log-Rotate` is used as a **Module**, if the state file is unspecified on the command line, by default a `Log-Rotate` state file named *Log-Rotate.status* is created in the *calling script's directory* (that is, the directory of the script that executes the `Log-Rotate` command line).
 
 ### Configuration Options 
 The following discusses how to use certain config options.

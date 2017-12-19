@@ -1387,7 +1387,10 @@ function Log-Rotate {
     Tells logrotate which command to use when mailing logs. 
     
     .PARAMETER State
-    The full path to a Log-Rotate state file to use for previously rotated Logs. The default location of the state file is within Log-Rotate's containing directory.
+    The path to a Log-Rotate state file to use for previously rotated Logs. May be absolute or relative.
+    If no state file is provided, by default the location of the state file (named 'Log-Rotate.state') will be the calling script's directory.
+    If a relative path is provided, the state file path will be resolved to the current working directory.
+    If a tilde ('~') is used at the beginning of the path, the state file path will be resolved to the user's home directory.
     
     .PARAMETER Usage
     Prints Usage information .
@@ -1482,9 +1485,9 @@ function Log-Rotate {
     }
 
     # Prints miscellaneous information and exits
-    $LogRotateVersion = '1.00'
+    $LogRotateVersion = '1.10'
     if ($Version) {
-        Write-Output "Log-Rotate 1.00"
+        Write-Output "Log-Rotate $LogRotateVersion"
         exit
     }
     if ($Help) {
@@ -1940,7 +1943,6 @@ function Log-Rotate {
                             Write-Verbose "Not running first action script, since no logs will be rotated"
                             Write-Verbose "Not running prerotate script, since no logs will be rotated"
                             Write-Verbose "Not running postrotate script, since no logs will be rotated"
-                            Write-Verbose "Not running preremove script, since no logs will be rotated"
                             Write-Verbose "Not running last action script, since no logs will be rotated"
                         } 
                     }
@@ -1958,7 +1960,12 @@ function Log-Rotate {
 
     try {   
         Write-Verbose "------------------------------ Log-Rotate --------------------------------------"
-        Write-Verbose "Script root: $PSScriptRoot"
+		# Will always reflect the calling script's path, even when used as a Module
+        Write-Verbose "Script root: $( Split-Path -parent $MyInvocation.PSCommandPath )"
+        #Write-Verbose "Current working directory: $( Convert-Path . )"
+        Write-Verbose "Current working directory: $( $(Get-Location).Path )"
+
+        # Debug
         if ($g_debugFlag -band 4) { Write-Verbose "Verbose stream: $VerbosePreference" }
         if ($g_debugFlag -band 4) { Write-Verbose "Debug stream: $DebugPreference" }
         if ($g_debugFlag -band 4) { Write-Debug "Erroraction: $ErrorActionPreference" }
@@ -2277,69 +2284,125 @@ function Log-Rotate {
         $LogFactory = [PSCustomObject]@{
             'LogObjects' = New-Object System.Collections.ArrayList
             'Status' = @{}
-            'StatusFile_FullName' = "$PSScriptRoot$([IO.Path]::DirectorySeparatorChar)Log-Rotate.status"
+            'StatusFile_FullName' = "$( Split-Path -parent $MyInvocation.PSCommandPath )$([IO.Path]::DirectorySeparatorChar)Log-Rotate.status"
         }
         $LogFactory | Add-Member -Name 'InitStatus' -MemberType ScriptMethod -Value {
-            param ([string]$statusfile_fullname) 
+            param ([string]$statusfile_path) 
 
             if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Verbose stream: $VerbosePreference" }
             if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Debug stream: $DebugPreference" } 
             if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Erroraction: $ErrorActionPreference" } 
 
-            # If no status file is specified, we'll create one in the script directory called 'Log-Rotate.status'
-            if (!$statusfile_fullname) {
-                $statusfile_fullname = $this.StatusFile_FullName
+            # If no status file is specified, we'll consider it to be in script directory called 'Log-Rotate.status'
+            if (!$statusfile_path) {
+                $statusfile_path = $this.StatusFile_FullName
             }
+            
+            if ($statusfile_path) {
+                # Ensure status file path contains valid characters
+                try {
+                    $exists = Test-Path -LiteralPath $statusfile_path -PathType Leaf -ErrorAction Stop
+                }catch {
+                    # Illegal characters in path
+                    throw "STATUSFILE: WARNING: Invalid status file $statusfile_path . $( Get-Exception-Message $_ )"
+                }
 
-            # Specified status file
-            if ($statusfile_fullname) {
-                if (Test-Path $statusfile_fullname -PathType Leaf) {
-                    Write-Verbose "status file: $statusfile_fullname"
-
-                    # Store state file fullname
-                    $this.StatusFile_FullName = $statusfile_fullname
-                    
-                    # Read status
-                    $status = Get-Content $statusfile_fullname -Raw
-                }else {
+                if ($exists) {
                     try {
-                        if (!$g_debugFlag) {
-                            #[io.file]::OpenWrite($statusfile_fullname).close()
-                            New-Item -Path $statusfile_fullname -ItemType File -Force -ErrorAction Stop | Out-Null
-                            if (Test-Path $statusfile_fullname -PathType Leaf) {
-                                Write-Verbose "new status file created: $statusfile_fullname"
-    
-                                # Store state file fullname
-                                $this.StatusFile_FullName = $statusfile_fullname
-                            }else {
-                                throw
-                            }
-                        }else{
-                            Write-Verbose "new status file created: $statusfile_fullname"
-                        }
+                        # Make it an absolute path, if it is not
+                        $this.StatusFile_FullName = Convert-Path $statusfile_path
+                        
+                        Write-Verbose "status file: $( $this.StatusFile_FullName )"
+
+                        # Read status
+                        $status = Get-Content $this.StatusFile_FullName -Raw
                     }catch {
-                        throw "Status file could not be created. $_"
+                        throw "STATUSFILE: WARNING: Status file $( $this.StatusFile_FullName ) could not be read. $( Get-Exception-Message $_ )"
+                    }
+                }else {
+                    # Create a new status file, creating all directories if needed. If a relative path was given, it will be resolved to the current working directory.
+                    try {
+                       
+                        #[io.file]::OpenWrite($statusfile_path).close()
+                        $item = New-Item -Path $statusfile_path -ItemType File -Force -ErrorAction Stop
+                        if ($item) {
+                            # Store state file fullname (absolute path).
+                            $this.StatusFile_FullName = $item.FullName
+                            Write-Verbose "new status file created: $( $this.StatusFile_FullName )"
+                        }else {
+                            throw
+                        }
+
+                        ## NOTE: Not using this, because debugging should also test the creation of a file. 
+                        # The reason for using the following code is only because the cmdlets such as Convert-Path, Resolve-Path must point to an existing item.
+                        # If debugging didn't create the file, we would have to manually normalize the status file path (i.e. get it's absolute path).
+                        <#
+                        if ($g_debugFlag) {
+                            $is_home = $statusfile_path -match '^~'
+                            if ($is_home) {
+                                # It's an absolute path
+                                $parent = Convert-Path '~'
+                                $child = $statusfile_path -replace '^~', ''
+                                $this.StatusFile_FullName = Join-Path -Path $parent -ChildPath $child
+                            }else {
+                                if ( ! [System.IO.Path]::IsPathRooted($statusfile_path) ) {
+                                    # A relative path was provided. 
+
+                                    # Can't use Convert-Path / Resolve-Path which must point to an existing item
+                                    # Build the absolute path to the status file.
+                                    # E.g. 'D:\mycwd\Log-Rotate.status' -> 'D:\mycwd\Log-Rotate.status'
+                                    # E.g. 'D:\mycwd\.\Log-Rotate.status' -> 'D:\mycwd\Log-Rotate.status'
+                                    # E.g. 'D:\mycwd\..\Log-Rotate.status' -> 'D:\Log-Rotate.status'
+                                    # E.g. 'D:\mycwd\..\test\Log-Rotate.status' -> 'D:\test\Log-Rotate.status'
+                                    $path = Join-Path -Path $PWD.Path -ChildPath $statusfile_path
+                                    $this.StatusFile_FullName = [System.IO.Path]::GetFullPath( $path )
+                                }else {
+                                    # An absolute path was provided. Standardize the slashes to platform-specific slashes ([IO.Path]::DirectorySeparatorChar)
+                                    $this.StatusFile_FullName = [System.IO.Path]::GetFullPath( $statusfile_path )
+                                }
+                            }
+                            Write-Verbose "new status file created: $( $this.StatusFile_FullName )"
+                        }
+                        #>
+                    }catch {
+                        throw "STATUSFILE: WARNING: Status file $statusfile_path could not be created. $( Get-Exception-Message $_ )"
                     }
                 }
             }
 
             # Parse and store previous rotation status
             if ($status) {
-                $status.split("`n").Trim() | Where-Object { $_ } | ForEach-Object {
+                $lines = $status.split("`n")
+
+                # The first line must be a Log-Rotate state file title, if not we might be dealing with another file.
+                if ( $lines[0] -notmatch 'Log\-Rotate state' ) {
+                    throw "Log-Rotate state file $( $this.StatusFile_FullName ) is of the wrong format. Check that you are not overriding another file. If you are not, delete the file and try again."
+                }
+
+                $lines.Trim() | Where-Object { $_ } | ForEach-Object {
                     $matches = [Regex]::Matches($_, '"([^"]+)" (.+)')
                     if ($matches.success) {
                         $path = $matches.Groups[1].Value
                         $lastRotateDate = $matches.Groups[2].Value
-                        #Write-Host " --------`npath: $path`n$lastRotateDate"
-                
                         if (Test-Path $path -PathType Leaf) {
-                            Try {
+                            try {
                                 $lastRotateDatetime = Get-Date -Date $lastRotateDate -Format 's' -ErrorAction SilentlyContinue
                                 $this.Status[$path] = $lastRotateDatetime
-                            }Catch {}
+                            }catch {}
                         }
                     }
                 }
+            }
+
+            # Always test for write permissions on the status file
+            try {
+                '' | Out-File $this.StatusFile_FullName -Append -NoNewline -Force
+                if (!$status -and $g_debugFlag) {
+                    # We're running Log-Rotate the first time in debug mode.
+                    Remove-Item $this.StatusFile_FullName
+                }
+            }catch {
+                throw "STATUSFILE: WARNING: Insufficient write permissions for status file $( $this.StatusFile_FullName ). Resolve this error before continuing. Reason: $( Get-Exception-Message $_ )"
             }
         }
         $LogFactory | Add-Member -Name 'Create' -MemberType ScriptMethod -Value {
@@ -2395,7 +2458,7 @@ function Log-Rotate {
                 
                     # Dump state file
                     Write-Verbose "Writing status file to $($this.StatusFile_FullName)"
-                    $output = "Log-Rotate state - version 1"
+                    $output = "Log-Rotate state - version $LogRotateVersion"
                     $this.Status.Keys | ForEach-Object {
                         $output += "`n`"$_`" $($this.Status[$_])"
                     }
