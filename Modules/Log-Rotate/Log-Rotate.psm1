@@ -386,7 +386,7 @@ $LogObject = [PSCustomObject]@{
                     Write-Verbose "Uncompression successful. Output: `n$output"
 
                     # Store the file
-                    $stdout | Out-File -Encoding utf8 -NoNewline
+                    $stdout | Out-File -Encoding utf8
 
                     $uncompressed = $true
                 }else {
@@ -2290,7 +2290,7 @@ function Log-Rotate {
 
             # Always test for write permissions on the status file
             try {
-                '' | Out-File $this.StatusFile_FullName -Append -NoNewline -Force
+                '' | Out-File $this.StatusFile_FullName -Append -Force
                 if (!$status -and $g_debugFlag) {
                     # We're running Log-Rotate the first time in debug mode.
                     Remove-Item $this.StatusFile_FullName
