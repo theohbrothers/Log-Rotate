@@ -219,9 +219,9 @@ $LogObject = [PSCustomObject]@{
                     foreach ($i in @($max_index..0)) {
                         # Construct filenames with their index, and extension if provided
                         # E.g. D:\console.log.5 or D:\console.log.5.7z
-                        $source_fullName = "$my_previous_directory$SLASH$prefix.$i$extension$compressextension"
+                        $source_fullName = Join-Path $my_previous_directory "$prefix.$i$extension$compressextension"
                         # E.g. D:\console.log.6 or D:\console.log.6.7z
-                        $destination_fullName = "$my_previous_directory$SLASH$prefix.$($i+1)$extension$compressextension"
+                        $destination_fullName = Join-Path $my_previous_directory "$prefix.$($i+1)$extension$compressextension"
 
                         # Rename old logs
                         Write-Verbose "Renaming $source_fullName to $destination_fullName (rotatecount $rotate, logstart $start, i $i)"
@@ -618,7 +618,7 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
             if (Test-Path $olddir -PathType Container) {
                 $olddir = (Get-Item $olddir).FullName
             }else {
-                $olddir = "$($logfile.Directory.FullName)$SLASH$olddir"
+                $olddir = Join-Path $($logfile.Directory.FullName) $olddir
                 if ( !(Test-Path $olddir -PathType Container) ) {
                     throw "Invalid olddir: $olddir. Not using olddir. Skipping log $($logfile.FullName)!"
                 }
@@ -631,7 +631,7 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
         # Check directories' permissions, skip over if insufficient permissions.
         foreach ($dir in $my_directory,$my_previous_directory) {
             try {
-                $_outfile = "$dir$SLASH.test$(Get-Date -Format 'yyyyMMdd')"
+                $_outfile = Join-Path $dir ".test$(Get-Date -Format 'yyyyMMdd')"
                 [io.file]::OpenWrite($_outfile).close()
                 Remove-Item $_outfile
             }catch {
@@ -689,7 +689,7 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
                 }
             }
         }
-        $my_previous_fullname = "$my_previous_directory$SLASH$my_previous_name"
+        $my_previous_fullname = Join-Path $my_previous_directory $my_previous_name
 
         # Determine the to-be-rotated log's compressed file name, if we are going to
         # E.g. 'D:\console.log.1.7z'
@@ -758,18 +758,18 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
         $my_expired_fullName =  if ($_preserve_extension) {
                                     if ($compress) {
                                         # E.g. 'D:\console.6.log.7z'
-                                        "$my_previous_directory$SLASH$my_stem.$($start+$rotate)$extension$compressext"
+                                        Join-Path $my_previous_directory "$my_stem.$($start+$rotate)$extension$compressext"
                                     }else {
                                         # E.g. 'D:\console.6.log'
-                                        "$my_previous_directory$SLASH$my_stem.$($start+$rotate)$extension"
+                                        Join-Path $my_previous_directory "$my_stem.$($start+$rotate)$extension"
                                     }
                                 }else {
                                     if ($compress) {
                                         # E.g. 'D:\console.log.6.7z'
-                                        "$my_previous_directory$SLASH$my_name.$($start+$rotate)$compressext"
+                                        Join-Path  $my_previous_directory "$my_name.$($start+$rotate)$compressext"
                                     }else {
                                         # E.g. 'D:\console.log.6'
-                                        "$my_previous_directory$SLASH$my_name.$($start+$rotate)"
+                                        Join-Path $my_previous_directory "$my_name.$($start+$rotate)"
                                     }
                                 }
 
