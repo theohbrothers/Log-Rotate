@@ -2,7 +2,7 @@
     # Returns a size specified with a unit (E.g. 100, 100k, 100M, 100G) into bytes without a unit
     param ([string]$size_str)
     if ($g_debugFlag -band 4) { Write-Debug "[Get-Size-Bytes] Verbose stream: $VerbosePreference" }
-    if ($g_debugFlag -band 4) { Write-Debug "[Get-Size-Bytes] Debug stream: $DebugPreference" } 
+    if ($g_debugFlag -band 4) { Write-Debug "[Get-Size-Bytes] Debug stream: $DebugPreference" }
     if ($g_debugFlag -band 4) { Write-Debug "[Get-Size-Bytes] Erroraction: $ErrorActionPreference" }
 
     if ($size_str -match '(?:[0-9]+|[0-9]+(?:k|M|G))$') {
@@ -32,7 +32,7 @@ function Get-Exception-Message ($ErrorRecord) {
     }
     $Message = Get-InnerExceptionMessage $ErrorRecord.Exception
     if ($g_debugFlag -band 2) {
-        $Message = $Message  + "`nStacktrace:`n" + $ErrorRecord.Exception.ErrorRecord.ScriptStackTrace   
+        $Message = $Message  + "`nStacktrace:`n" + $ErrorRecord.Exception.ErrorRecord.ScriptStackTrace
     }
     $Message
 }
@@ -57,7 +57,7 @@ function Start-Script {
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
         if ($g_debugFlag -band 4) { Write-Verbose "[Start-Script] callerEA: $callerEA" }
-        if ($g_debugFlag -band 4) { Write-Verbose "[Start-Script] ErrorActionPreference: $ErrorActionPreference" } 
+        if ($g_debugFlag -band 4) { Write-Verbose "[Start-Script] ErrorActionPreference: $ErrorActionPreference" }
     }
 
     process {
@@ -79,7 +79,7 @@ function Start-Script {
                     $output = & $cmd -Command $scriptblock -Args @($file_FullName)
                 }else {
                     # E.g. sh -c 'echo ${0}' 'D:\console.log'
-                    
+
                     # & operator: When we use & $cmd $param, powershell wraps args containing spaces with double-quotes, so we need escape inner double-quotes
                     $cmd = 'sh'
                     $params = '-c', $script.Replace('"', '\"'), $file_FullName
@@ -92,7 +92,7 @@ function Start-Script {
                 Write-Verbose "Script output: `n$output"
 
                 # TODO: Not using jobs for now, because they are slow.
-                <#  
+                <#
                 $scriptblock = [Scriptblock]::Create($script)
                 $output = & $scriptblock $file_FullName
                 $job = Start-Job -ScriptBlock $scriptblock -ArgumentList $file_FullName -ErrorAction Stop
@@ -116,7 +116,7 @@ function Extend-Class {
     $importedModule.ExportedFunctions.Keys | ForEach-Object {
         Write-Verbose "Key: $_"
         Write-Verbose "Function: $((Get-item function:$_).Definition)"
-        $scriptblock = [Scriptblock]::Create( (Get-item function:$_).Definition ) 
+        $scriptblock = [Scriptblock]::Create( (Get-item function:$_).Definition )
         $classObject | Add-Member -Name $_ -MemberType ScriptMethod -Value $scriptblock
     }
 }
@@ -185,7 +185,7 @@ $LogObject = [PSCustomObject]@{
 
             $false
         }
-            
+
         function Rotate-Previous-Files-Incremental
         {
             # This function is only used for incremental index extensions, E.g. console.log.1 -> console.log.2. It is not used for date extensions.
@@ -196,7 +196,7 @@ $LogObject = [PSCustomObject]@{
                 [Parameter(Mandatory=$True,Position=4)]
                 [int]$max_index = 0
             )
-            
+
             [Regex]$regex = if ($rotate_compressed_files) {
                                 $my_previous_compressed_captures_regex
                             }else {
@@ -221,8 +221,8 @@ $LogObject = [PSCustomObject]@{
                         # E.g. D:\console.log.5 or D:\console.log.5.7z
                         $source_fullName = "$my_previous_directory$SLASH$prefix.$i$extension$compressextension"
                         # E.g. D:\console.log.6 or D:\console.log.6.7z
-                        $destination_fullName = "$my_previous_directory$SLASH$prefix.$($i+1)$extension$compressextension"	
-                
+                        $destination_fullName = "$my_previous_directory$SLASH$prefix.$($i+1)$extension$compressextension"
+
                         # Rename old logs
                         Write-Verbose "Renaming $source_fullName to $destination_fullName (rotatecount $rotate, logstart $start, i $i)"
                         if ($g_debugFlag) { continue }
@@ -238,7 +238,7 @@ $LogObject = [PSCustomObject]@{
                     }
                 }
             }
-        }  
+        }
 
         function Rename-File-Within-Compressed-Archive {
             # TODO: Not using this function for now, because this always recreates an archive, dumping a lot to the disk.
@@ -254,12 +254,12 @@ $LogObject = [PSCustomObject]@{
                     $directory =$_.Directory.FullName
                     $fullName = $_.FullName
                     $baseName = $_.BaseName
-            
+
                     $params = @( 'rn', $fullName, '*', $baseName )
                     try {
                         Write-Verbose "Rename log inside compressed archive $fullName to $baseName"
-                        if ($g_debugFlag) { 
-                            continue 
+                        if ($g_debugFlag) {
+                            continue
                         }
 
                         $scriptblock = {
@@ -272,7 +272,7 @@ $LogObject = [PSCustomObject]@{
                             & $cmd $params
                         }
                         $job = Start-Job -ScriptBlock $scriptblock -ArgumentList $directory,$compresscmd,$params -ErrorAction Stop
-                        $output = Receive-Job -Job $job -Wait -ErrorAction Stop 
+                        $output = Receive-Job -Job $job -Wait -ErrorAction Stop
                         if ($job.State -eq 'Failed') {
                             throw "Renaming failed because: $($job.ChildJobs[0].JobStateInfo.Reason.Message)"
                         }else {
@@ -294,13 +294,13 @@ $LogObject = [PSCustomObject]@{
                 [Parameter(Mandatory=$True,Position=1)]
                 [string]$filter
             )
-        
+
             $compressed = $false
 
             # E.g. 7z.exe a -t7z D:\console.log.7z D:\console.log
             # E.g. gzip.exe D:\console.log
-            $compressoptions = $compressoptions.Split(' ') | Where-Object { $_.Trim() } 
-            
+            $compressoptions = $compressoptions.Split(' ') | Where-Object { $_.Trim() }
+
             $params = if ($compresscmd -match '7z') {
                         $compressoptions + $compressed_fullname + $filter
                       }else {
@@ -311,14 +311,14 @@ $LogObject = [PSCustomObject]@{
 
             try {
                 Write-Verbose "Compressing log with: $compresscmd"
-                if ($g_debugFlag) { 
-                    return 
+                if ($g_debugFlag) {
+                    return
                 }
 
                 $output = & $compresscmd $params
                 if (Test-Path $compressed_fullname) {
                     Write-Verbose "Compression successful. Output: `n$output"
-                    
+
                     $compressed = $true
                 }else {
                     Write-Verbose "Compression failed. Output: `n$output"
@@ -337,14 +337,14 @@ $LogObject = [PSCustomObject]@{
                     & $cmd $params
                 }
                 $job = Start-Job -ScriptBlock $scriptblock -ArgumentList $logfile.Directory.FullName,$compresscmd,$params -ErrorAction Stop
-                $output = Receive-Job -Job $job -Wait -ErrorAction Stop 
-                
+                $output = Receive-Job -Job $job -Wait -ErrorAction Stop
+
                 if ($job.State -eq 'Failed') {
                     throw "Compression failed because: $($job.ChildJobs[0].JobStateInfo.Reason.Message)"
                 }else {
                     if (Test-Path $compressed_fullname) {
                         Write-Verbose "Compression successful. Output: `n$output"
-                        
+
                         $compressed = $true
                     }else {
                         Write-Verbose "Compression failed. Output: `n$output"
@@ -364,7 +364,7 @@ $LogObject = [PSCustomObject]@{
                     #Write-Verbose "Removed $filter"
                 }
             }
-        }   
+        }
 
         function Uncompress-File {
             # TODO: Not using uncompress because we're not doing mail for now.
@@ -372,14 +372,14 @@ $LogObject = [PSCustomObject]@{
                 [Parameter(Mandatory=$True,Position=0)]
                 [string]$compressed_fullname
             )
-        
+
             $uncompressed = $false
 
             # E.g. Extract as a file: 7z.exe x -t7z D:\console.log.7z
             # E.g. Extract to stdout: 7z.exe x -so D:\console.log.7z
-            $uncompressoptions = $uncompressoptions.Split(' ') | Where-Object { $_.Trim() } 
+            $uncompressoptions = $uncompressoptions.Split(' ') | Where-Object { $_.Trim() }
             $params = $uncompressoptions + $compressed_fullname
-        
+
             try {
                 $stdout = & $compresscmd $params
                 if ($stdout) {
@@ -431,7 +431,7 @@ $LogObject = [PSCustomObject]@{
                     Write-Verbose "Removed $compressed_fullname"
                 }
             }
-        }  
+        }
 
         function Notify-Purge {
             param (
@@ -459,7 +459,7 @@ $LogObject = [PSCustomObject]@{
                     try {
                         Start-Script $preremove $file_fullname -ErrorAction Continue
                     }catch {
-                        throw "Failed to run preremove script. $(Get-Exception-Message $_)" 
+                        throw "Failed to run preremove script. $(Get-Exception-Message $_)"
                     }
                 }
 
@@ -486,7 +486,7 @@ $LogObject = [PSCustomObject]@{
                 [Parameter(Mandatory=$True,Position=2)]
                 [int]$oldest_is_first_when_name_sorted
             )
-        
+
             $files_count =  if ($files) {
                                 $files.Count
                             }else {
@@ -499,7 +499,7 @@ $LogObject = [PSCustomObject]@{
                     Write-Verbose "No more old files to remove $($_.FullName)"
                     return
                 }
-                
+
                 $oldfiles_count = $files_count - $keep_count
                 $oldfiles = if ($oldest_is_first_when_name_sorted) {
                     # Datetime. Exclude the last x items, when sorted by name ascending.
@@ -552,8 +552,8 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
             'rotation_datetime' = (Get-Date).ToLocalTime()
         }
         'Metadata' = @{
-            my_name = 'console.log.'; 
-            $my_extension = '.log'; 
+            my_name = 'console.log.';
+            $my_extension = '.log';
             $my_stem = '.log';
             ...
         }
@@ -562,8 +562,8 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
     param ([System.IO.FileInfo]$logfile, [hashtable]$options, [string]$lastRotationDate)
 
     if ($g_debugFlag -band 4) { Write-Debug "[LogObject][New] Verbose stream: $VerbosePreference" }
-    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][New] Debug stream: $DebugPreference" } 
-    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][New] Erroraction: $ErrorActionPreference" } 
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][New] Debug stream: $DebugPreference" }
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][New] Erroraction: $ErrorActionPreference" }
 
     # Unpack the block's options into variables
     $options.Keys | ForEach-Object {
@@ -586,8 +586,8 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
 
         # Are we preserving the extension?
         $_preserve_extension = $extension -and $my_extension -and ($my_extension -eq $extension)
-        Write-Verbose (& { if (!$_preserve_extension) {  "Not preserving extension." } else { "Preserving extension: $extension" } }) 
-        
+        Write-Verbose (& { if (!$_preserve_extension) {  "Not preserving extension." } else { "Preserving extension: $extension" } })
+
         # If we're preserving extension (which can consist of multiple .), we need the stam of the filename.
         # E.g. 'console'. It's the same as $_.BaseName
         $my_stem =  if ($extension) {
@@ -598,10 +598,10 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
                      }else {
                         $logfile.BaseName
                      }
- 
+
         # E.g. 'console\.log'
         $my_name_regex = [Regex]::Escape($my_name)
-        
+
         # E.g. '\.log'
         $extension_regex = [Regex]::Escape($extension)
 
@@ -609,7 +609,7 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
         $my_stem_regex = [Regex]::Escape($my_stem)
 
         # Get current directory. E.g. 'D:\data'
-        $my_directory = $logfile.Directory.FullName    
+        $my_directory = $logfile.Directory.FullName
 
         # Validate our olddir is a directory, and resolve it to an absolute path
         if ($olddir) {
@@ -632,7 +632,7 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
         foreach ($dir in $my_directory,$my_previous_directory) {
             try {
                 $_outfile = "$dir$SLASH.test$(Get-Date -Format 'yyyyMMdd')"
-                [io.file]::OpenWrite($_outfile).close() 
+                [io.file]::OpenWrite($_outfile).close()
                 Remove-Item $_outfile
             }catch {
                 throw "Insufficient permissions on $dir. Ensure the user $($env:username) has read and write permissions on the directory."
@@ -649,19 +649,19 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
             $_dateformat_tmp = $dateformat
             $dateformat = $dateformat.Trim()
             Write-Verbose "Converted dateformat from '$_dateformat_tmp' to '$dateformat'"
-            
+
             # Convert the strftime datetime format string (specifiers: %Y, %m, and %d) to a .NET datetime format string (specifiers: yyyy, mm, dd). Then use it to get the current datetime as a string
             # E.g. '2017-12-25'
             #$_format = $dateformat.replace('%Y', 'yyyy').replace('%m', 'MM').replace('%d', 'dd')
             #$my_date = Get-Date -Format $_format
 
-            # Replace specifier %s with unix epoch first in the strftime datetime format string. Then use it to get the current datetime as a string. 
+            # Replace specifier %s with unix epoch first in the strftime datetime format string. Then use it to get the current datetime as a string.
             # E.g. '2017-12-25'
             $_unix_epoch = [Math]::Floor([decimal](Get-Date (Get-Date).ToUniversalTime() -uformat "%s"))
             $_uformat = $dateformat.replace('%s', $_unix_epoch)
             $my_date = Get-Date -UFormat $_uformat
             Write-Verbose "Determined date extension to be '$my_date'"
-                
+
             # Determine glob
             # E.g. [0-9]{4}-[0-9]{2}-[0-9]{2}
             $_unix_epoch_length = $_unix_epoch.ToString().Length
@@ -678,7 +678,7 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
                 }else {
                     # E.g. 'console.1.log'
                     "$my_stem.$start$extension"
-                }        
+                }
             }else {
                 if ($dateext) {
                     # E.g. 'console.log-2017-11-20'
@@ -690,21 +690,21 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
             }
         }
         $my_previous_fullname = "$my_previous_directory$SLASH$my_previous_name"
-        
+
         # Determine the to-be-rotated log's compressed file name, if we are going to
         # E.g. 'D:\console.log.1.7z'
-        $my_previous_compressed_fullname =  if ($compress) { 
-                                                "$my_previous_fullname$compressext" 
-                                            } else { 
-                                                '' 
+        $my_previous_compressed_fullname =  if ($compress) {
+                                                "$my_previous_fullname$compressext"
+                                            } else {
+                                                ''
                                             }
 
         # Build prototype names
         # E.g. 'console.log.1'
         # E.g. 'console.log.1.7z'
         $my_previous_name_prototype = $my_previous_name
-        $my_previous_compressed_name_prototype =    if ($compress) { 
-                                                        "$my_previous_name$compressext" 
+        $my_previous_compressed_name_prototype =    if ($compress) {
+                                                        "$my_previous_name$compressext"
                                                     }
 
         $my_index_regex = "\d{1,$( $rotate.ToString().Length )}";
@@ -753,7 +753,7 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
                             # Get all my existing compressed files in this folder. E.g. 'console.log.x.7z', where x is a number
                             Get-ChildItem $my_previous_directory | Where-Object { $_.Name -match $my_previous_noncompressed_regex }
                         }
-        
+
         # The expired file name. Only used for non-date extension.
         $my_expired_fullName =  if ($_preserve_extension) {
                                     if ($compress) {
@@ -783,8 +783,8 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
             }
 
             # If never rotated before, go ahead
-            #if (!$lastRotationDate) { 
-            #    return $true 
+            #if (!$lastRotationDate) {
+            #    return $true
             #}
 
             # Don't rotate if log file size is 0, and we specified to not rotate empty files.
@@ -805,7 +805,7 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
                 }
             }
 
-            # Don't rotate if we haven't met time thresholds by daily / weekly / monthy / yearly options. 
+            # Don't rotate if we haven't met time thresholds by daily / weekly / monthy / yearly options.
             # If minsize specified along with time thresholds, don't rotate if either time or minsize thresholds are unmet.
             if ($daily -or $weekly -or $monthly -or $yearly) {
                 $time_interval_over = & {
@@ -813,7 +813,7 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
                     if (!$lastRotationDate) {
                         return $true
                     }
-                    
+
                     $_now_dt = (Get-Date).ToLocalTime()
                     # Not using CreationTime, but using state file now.
                     #$_my_newest_file = $my_prevfiles | Sort-Object -Property CreationTime -Descending | Select-Object -First 1
@@ -886,7 +886,7 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
 
         # Assign properties to the Log Object
         if ($should_rotate) {
-            
+
             $_logObject = $LogObject.psobject.copy()
             $_logObject.Logfile = $logfile;
             $_logObject.Options = $options;
@@ -907,22 +907,22 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
                 'my_previous_name' = $my_previous_name
                 'my_previous_fullname' = $my_previous_fullname
                 'my_date' = $my_date
-                
+
                 'my_name_regex' = $my_name_regex
                 'my_date_regex' = $my_date_regex
                 'my_previous_noncompressed_regex' = $my_previous_noncompressed_regex
                 'my_previous_compressed_regex' = $my_previous_compressed_regex
                 'my_previous_noncompressed_captures_regex' = $my_previous_noncompressed_captures_regex
-                'my_previous_compressed_captures_regex' = $my_previous_compressed_captures_regex    
+                'my_previous_compressed_captures_regex' = $my_previous_compressed_captures_regex
                 'my_previous_compressed_fullname' = $my_previous_compressed_fullname
 
                 'my_prevfiles' = $my_prevfiles
-                
+
                 'my_previous_name_prototype' = $my_previous_name_prototype
                 'my_previous_compressed_name_prototype' = $my_previous_compressed_name_prototype
-               
+
                 'my_expired_fullName' = $my_expired_fullName
-                
+
                 # For debug mode
                 'debug_my_prevfilespurged_fullnames' = [System.Collections.ArrayList]@()
 
@@ -941,7 +941,7 @@ $LogObject | Add-Member -Name 'New' -MemberType ScriptMethod -Value {
 }
 $LogObject | Add-Member -Name 'PrePrerotate' -MemberType ScriptMethod -Value {
     if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PrePrerotate] Verbose stream: $VerbosePreference" }
-    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PrePrerotate] Debug stream: $DebugPreference" } 
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PrePrerotate] Debug stream: $DebugPreference" }
     if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PrePrerotate] Erroraction: $ErrorActionPreference" }
 
     # Unpack Object properties
@@ -952,7 +952,7 @@ $LogObject | Add-Member -Name 'PrePrerotate' -MemberType ScriptMethod -Value {
     $this.Metadata.Keys | ForEach-Object {
         Set-Variable -Name $_ -Value $this.Metadata[$_]
     }
-    
+
     # Unpack Object methods
     . $this.PrivateMethods
     . $this.HelperMethods
@@ -985,7 +985,7 @@ $LogObject | Add-Member -Name 'PrePrerotate' -MemberType ScriptMethod -Value {
         }
     }elseif ($compress) {
         # Compress
-    
+
         if (!$dateext) {
 
             if (!$delaycompress) {
@@ -1000,7 +1000,7 @@ $LogObject | Add-Member -Name 'PrePrerotate' -MemberType ScriptMethod -Value {
 
                 $this.Status.preprerotate = $true
             }else {
-                # Flag to indicate safe to rotate 
+                # Flag to indicate safe to rotate
                 $_skip_rotate = $false
                 if (Test-Path $my_previous_fullname) {
                     if (Test-Path $my_previous_compressed_fullname) {
@@ -1010,10 +1010,10 @@ $LogObject | Add-Member -Name 'PrePrerotate' -MemberType ScriptMethod -Value {
                     }else {
                         # Compress previous file, Remove compression source file
                         # D:\console.log.1 -> D:\console.log.1.7z
-                        Compress-File $my_previous_compressed_fullname $my_previous_fullname	
+                        Compress-File $my_previous_compressed_fullname $my_previous_fullname
                     }
                 }
-                
+
                 if ($_skip_rotate) {
                     Notify-Purge $my_expired_fullName
                 }else {
@@ -1030,15 +1030,15 @@ $LogObject | Add-Member -Name 'PrePrerotate' -MemberType ScriptMethod -Value {
                 }
             }
         }else {
-            
+
             # Date extension
             if (!$delaycompress) {
-                
+
                 # Delete old logs
                 if ($rotate -gt 0) {
                     Remove-Old-Files (Get-Files $my_previous_compressed_regex $my_previous_directory) $rotate 1
                 }
-                
+
                 if (Test-Path $my_previous_compressed_fullname) {
                     # File exists.
                     Write-Verbose "Destination file $my_previous_compressed_fullname already exists, skipping rotation"
@@ -1058,15 +1058,15 @@ $LogObject | Add-Member -Name 'PrePrerotate' -MemberType ScriptMethod -Value {
                     $_fullname = $_.FullName
                     # E.g. console.log-2017-11-25.7z
                     $_compressed_fullname = "$_fullname$compressext"
-                    
+
                     if ( Test-Path $_compressed_fullname ) {
                         Write-Verbose "Error creating output file $_compressed_fullname`: File exists"
-                       
+
                         $_skip_rotate = $true
                     }else {
                         # Compress previous file, Remove compression source file
                         # D:\console.log-2017-11-25 -> D:\console.log-2017-11-25.7z
-                        Compress-File $_compressed_fullname $_fullname	
+                        Compress-File $_compressed_fullname $_fullname
                     }
                 }
 
@@ -1087,14 +1087,14 @@ $LogObject | Add-Member -Name 'PrePrerotate' -MemberType ScriptMethod -Value {
             }
 
         } # End if ($dateext)
-    
+
     } # End if ($compress)
 
     $this.Status.preprerotate
 }
 $LogObject | Add-Member -Name 'Prerotate' -MemberType ScriptMethod -Value {
     if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Prerotate] Verbose stream: $VerbosePreference" }
-    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Prerotate] Debug stream: $DebugPreference" } 
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Prerotate] Debug stream: $DebugPreference" }
     if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Prerotate] Erroraction: $ErrorActionPreference" }
 
     # Unpack Object properties
@@ -1106,7 +1106,7 @@ $LogObject | Add-Member -Name 'Prerotate' -MemberType ScriptMethod -Value {
         try {
             Start-Script $prerotate $my_fullname -ErrorAction Stop
         }catch {
-            throw "Failed to run prerotate script. $(Get-Exception-Message $_)" 
+            throw "Failed to run prerotate script. $(Get-Exception-Message $_)"
         }
 
         $this.Status.prerotate = $true
@@ -1116,7 +1116,7 @@ $LogObject | Add-Member -Name 'Prerotate' -MemberType ScriptMethod -Value {
 }
 $LogObject | Add-Member -Name 'RotateMainOnly' -MemberType ScriptMethod -Value {
     if ($g_debugFlag -band 4) { Write-Debug "[LogObject][RotateMainOnly] Verbose stream: $VerbosePreference" }
-    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][RotateMainOnly] Debug stream: $DebugPreference" } 
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][RotateMainOnly] Debug stream: $DebugPreference" }
     if ($g_debugFlag -band 4) { Write-Debug "[LogObject][RotateMainOnly] Erroraction: $ErrorActionPreference" }
 
     # Unpack Object properties
@@ -1127,7 +1127,7 @@ $LogObject | Add-Member -Name 'RotateMainOnly' -MemberType ScriptMethod -Value {
     $this.Metadata.Keys | ForEach-Object {
         Set-Variable -Name $_ -Value $this.Metadata[$_]
     }
-   
+
     # Unpack Object methods
     . $this.PrivateMethods
 
@@ -1136,9 +1136,9 @@ $LogObject | Add-Member -Name 'RotateMainOnly' -MemberType ScriptMethod -Value {
 }
 $LogObject | Add-Member -Name 'Postrotate' -MemberType ScriptMethod -Value {
     if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Postrotate] Verbose stream: $VerbosePreference" }
-    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Postrotate] Debug stream: $DebugPreference" } 
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Postrotate] Debug stream: $DebugPreference" }
     if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Postrotate] Erroraction: $ErrorActionPreference" }
-    
+
     # Unpack Object properties
     $postrotate = $this.Options['postrotate']
     $my_fullname = $this.Metadata['my_fullname']
@@ -1148,7 +1148,7 @@ $LogObject | Add-Member -Name 'Postrotate' -MemberType ScriptMethod -Value {
         try {
             Start-Script $postrotate $my_fullname -ErrorAction Stop
         }catch {
-            throw "Failed to run postrotate script. $(Get-Exception-Message $_)" 
+            throw "Failed to run postrotate script. $(Get-Exception-Message $_)"
         }
         $this.Status.postrotate = $true
     }
@@ -1157,7 +1157,7 @@ $LogObject | Add-Member -Name 'Postrotate' -MemberType ScriptMethod -Value {
 }
 $LogObject | Add-Member -Name 'PostPostRotate' -MemberType ScriptMethod -Value {
     if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PostPostRotate] Verbose stream: $VerbosePreference" }
-    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PostPostRotate] Debug stream: $DebugPreference" } 
+    if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PostPostRotate] Debug stream: $DebugPreference" }
     if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PostPostRotate] Erroraction: $ErrorActionPreference" }
 
     # Unpack Object properties
@@ -1168,14 +1168,14 @@ $LogObject | Add-Member -Name 'PostPostRotate' -MemberType ScriptMethod -Value {
     $this.Metadata.Keys | ForEach-Object {
         Set-Variable -Name $_ -Value $this.Metadata[$_]
     }
-   
+
     # Unpack Object methods
     . $this.PrivateMethods
     . $this.HelperMethods
 
     if (!$compress) {
         # Normal rotation without compression
-		
+
         if (!$dateext) {
             # Non-dateext: we'll just purge a single file. At least that's how it works the actual logrotate.
 
@@ -1187,7 +1187,7 @@ $LogObject | Add-Member -Name 'PostPostRotate' -MemberType ScriptMethod -Value {
             # Remove expired files
             if ($rotate -gt 0) {
                 $keep_prev_count = $rotate
-                $prev_files = Get-Files $my_previous_noncompressed_regex $my_previous_directory | Where-Object { 
+                $prev_files = Get-Files $my_previous_noncompressed_regex $my_previous_directory | Where-Object {
                                                                                                         !$g_debugFlag -or
                                                                                                         ($g_debugFlag -and $_.FullName -notin $debug_my_prevfilespurged_fullnames )
                                                                                                     }
@@ -1199,15 +1199,15 @@ $LogObject | Add-Member -Name 'PostPostRotate' -MemberType ScriptMethod -Value {
 		}
     }elseif ($compress) {
         # Compress
-    
-        if (!$dateext) {							
+
+        if (!$dateext) {
             # Non-dateext: we'll just purge a single file. At least that's how it works the actual logrotate.
 
             if (!$delaycompress) {
                 # Compress previous file, Remove compression source file
                 # D:\console.log.1 -> D:\console.log.1.7z
-                Compress-File $my_previous_compressed_fullname $my_previous_fullname	
-               
+                Compress-File $my_previous_compressed_fullname $my_previous_fullname
+
 			    # Remove expired file
                 Purge-File $my_expired_fullName
             }else {
@@ -1231,7 +1231,7 @@ $LogObject | Add-Member -Name 'PostPostRotate' -MemberType ScriptMethod -Value {
 
             # Delete old compressed logs
             if ($rotate -gt 0) {
-                $prev_files = Get-Files $my_previous_compressed_regex $my_previous_directory | Where-Object { 
+                $prev_files = Get-Files $my_previous_compressed_regex $my_previous_directory | Where-Object {
                     !$g_debugFlag -or
                     ($g_debugFlag -and $_.FullName -notin $debug_my_prevfilespurged_fullnames )
                 }
@@ -1240,7 +1240,7 @@ $LogObject | Add-Member -Name 'PostPostRotate' -MemberType ScriptMethod -Value {
 
         } # End if ($dateext)
 
-        
+
         $this.Status.postpostrotate = $true
 
     } # End if ($compress)
@@ -1252,19 +1252,19 @@ $LogObject | Add-Member -Name 'PostPostRotate' -MemberType ScriptMethod -Value {
 function Log-Rotate {
     <#
     .SYNOPSIS
-    A replica of the logrotate utility, except this also runs on Windows systems. 
-    
+    A replica of the logrotate utility, except this also runs on Windows systems.
+
     .DESCRIPTION
-    The functionality of Log-Rotate was ported from the original logrotate. 
-    It is made to work in the exact way logrotate would work: Same rotation logic, same outputs, same configurations. 
-    Best of all, it works on one more platform: Windows. 
-    
+    The functionality of Log-Rotate was ported from the original logrotate.
+    It is made to work in the exact way logrotate would work: Same rotation logic, same outputs, same configurations.
+    Best of all, it works on one more platform: Windows.
+
     .PARAMETER Config
     The path to the Log-Rotate config file, or the path to a directory containing config files. If a directory is given, all files will be read as config files.
-    Any number of config file paths can be given. 
+    Any number of config file paths can be given.
     Later config files will override earlier ones.
     The best method is to use a single config file that includes other config files by using the 'include' directive.
-    
+
     .PARAMETER ConfigAsString
     The configuration as a string, accepting input from the pipeline. Especially useful when you don't want to use a separate config file.
 
@@ -1273,44 +1273,44 @@ function Log-Rotate {
 
     .PARAMETER Force
     Forces Log-Rotate to perform a rotation for all Logs, even when Log-Rotate deems particular Log(s) to not require rotation.
-    
+
     .PARAMETER Help
     Prints Help information.
-    
+
     .PARAMETER Mail
-    Tells logrotate which command to use when mailing logs. 
-    
+    Tells logrotate which command to use when mailing logs.
+
     .PARAMETER State
     The path to a Log-Rotate state file to use for previously rotated Logs. May be absolute or relative.
-    If no state file is provided, by default the location of the state file (named 'Log-Rotate.state') will be the calling script's directory.
+    If no state file is provided, by default the location of the state file (named 'Log-Rotate.state') will be in the calling script's directory. If there is no calling script, the location of the state file will be in the current working directory.
     If a relative path is provided, the state file path will be resolved to the current working directory.
     If a tilde ('~') is used at the beginning of the path, the state file path will be resolved to the user's home directory.
-    
+
     .PARAMETER Usage
-    Prints Usage information .
-    
-    .EXAMPLE
-    Log-Rotate -ConfigAsString $config -State $state -Verbose 
+    Prints Usage information
 
     .EXAMPLE
-    Log-Rotate "/etc/Log-Rotate.conf" -State "/var/lib/Log-Rotate/Log-Rotate.status" -Verbose 
+    Log-Rotate -ConfigAsString $configAsString -State $state -Verbose
 
     .EXAMPLE
-    Log-Rotate "/etc/configs/" -Verbose 
+    Log-Rotate -Config "/etc/Log-Rotate.conf" -State "/var/lib/Log-Rotate/Log-Rotate.status" -Verbose
+
+    .EXAMPLE
+    Log-Rotate -Config "/etc/configs/" -Verbose
 
     .LINK
     https://github.com/leojonathanoh/Log-Rotate
 
     .NOTES
     *logrotate manual: https://linux.die.net/man/8/logrotate
-    
+
     The command line is identical to the actual logrotate utility, if parameter aliases are used. If using full parameters, only optional (-mail, -state) and miscellaneous (-usage, -help) parameters use one instead of two dashes. (i.e. -mail instead of --mail)
     For help on command line options, use:
         Get-Help Log-Rotate -detailed
 
     Configuration file(s) should follow the same format and options used by the actual logrotate utility.
     See the logrotate manual* for configuration options.
-    
+
     Because logrotate is constantly being updated, the present utility may not be up to par with it. But it won't be too hard or too long for new features to be integrated.
     #>
     [CmdletBinding()]
@@ -1337,9 +1337,9 @@ function Log-Rotate {
         [switch]$Usage
         ,
         [alias("v")]
-        [switch]$Version   
+        [switch]$Version
     )
-    
+
     if ($debug) {
         Write-Warning "We are in Debug mode. No logs will be rotated."
     }
@@ -1368,14 +1368,14 @@ function Log-Rotate {
 
     # Global scope debug preference
     $DebugPreferenceOld = $DebugPreference
-    if ($DebugPreference -eq 'Inquire') { 
+    if ($DebugPreference -eq 'Inquire') {
         # If we're using the -debug flag, always use -verbose mode.
         $DebugPreference = 'Continue'
         # Preserve our set debug flag for testing
         $g_debugFlag = if ($g_debugFlag) { $g_debugFlag } else { 1 }
-    }else { 
-         # If we're not using the -debug flag, debug should stay silent instead of prompting. 
-        $DebugPreference = 'SilentlyContinue' 
+    }else {
+         # If we're not using the -debug flag, debug should stay silent instead of prompting.
+        $DebugPreference = 'SilentlyContinue'
     }
 
     # Prints miscellaneous information and exits
@@ -1397,7 +1397,7 @@ function Log-Rotate {
 
 
         if ($g_debugFlag -band 4) { Write-Debug "[Compile-Full-Config] Verbose stream: $VerbosePreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[Compile-Full-Config] Debug stream: $DebugPreference" } 
+        if ($g_debugFlag -band 4) { Write-Debug "[Compile-Full-Config] Debug stream: $DebugPreference" }
         if ($g_debugFlag -band 4) { Write-Debug "[Compile-Full-Config] Erroraction: $ErrorActionPreference" }
 
         [Scriptblock]$matchEvaluator = {
@@ -1406,8 +1406,8 @@ function Log-Rotate {
             $include_path = $match.Groups[1].Value.Trim()
             # Check if it's a file or directory
             if ($include_path -and (Test-Path $include_path))  {
-                $item = Get-Item $include_path    
-                
+                $item = Get-Item $include_path
+
                 if ($item.PSIsContainer) {
                     # It's a directory. Include content of all files inside it
                     $content = ""
@@ -1420,7 +1420,7 @@ function Log-Rotate {
                     # It's a single file. Include its content
                     Write-Verbose "CONFIG: Including file $($item.FullName)"
                     Write-Verbose "CONFIG: Reading file $($item.FullName)"
-                    $content = Get-Content $include_path -Raw 
+                    $content = Get-Content $include_path -Raw
                 }
             }else {
                 Write-Verbose "CONFIG: Ignoring included path $include_path because it is invalid."
@@ -1431,11 +1431,11 @@ function Log-Rotate {
                 "`n$content"
             }
         }
-  
+
         # Remove all comments (i.e. starting with '#')
         [Regex]$remove_comments_regex = '#.*'
         $MultipleConfig = $remove_comments_regex.Replace($MultipleConfig, '')
-        
+
         # Remove all within-block 'include' directives
         [Regex]$include_regex = '({[^}]*?)(include[^\n]*)([^}]*})'
         $MultipleConfig = $include_regex.Replace($MultipleConfig, '$1$3')
@@ -1455,7 +1455,7 @@ function Log-Rotate {
         param ([string]$FullConfig)
 
         if ($g_debugFlag -band 4) { Write-Debug "[Validate-Full-Config] Verbose stream: $VerbosePreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[Validate-Full-Config] Debug stream: $DebugPreference" } 
+        if ($g_debugFlag -band 4) { Write-Debug "[Validate-Full-Config] Debug stream: $DebugPreference" }
         if ($g_debugFlag -band 4) { Write-Debug "[Validate-Full-Config] Erroraction: $ErrorActionPreference" }
 
         function Get-LinesAround([string[]]$lines, [int]$line_number) {
@@ -1499,7 +1499,7 @@ function Log-Rotate {
         foreach ($line in $lines) {
             $line_number++
             $level = 0
-            
+
 
             # Validate block definition
             [Regex]$block_path_pattern_line = "(.*)({)"
@@ -1523,7 +1523,7 @@ function Log-Rotate {
                 }
 
                 $bracer_found = $matches.Groups[1].Value
-                
+
                 if ($bracer_found -ne $bracer_to_find) {
                     $problem_line = if ($bracer_to_find -eq '}') { $last_bracer_line } else { $line_number }
                     $dump = Get-LinesAround $lines $line_number | Out-String
@@ -1552,7 +1552,7 @@ function Log-Rotate {
             # The Block object
             [Parameter(Mandatory=$True)]
             [object]$block,
-    
+
             # Block Options
             [switch]$compress,
             [string]$compresscmd,
@@ -1571,7 +1571,7 @@ function Log-Rotate {
             [switch]$ifempty,
             [string]$include,
             [string]$mail ,
-            [switch]$mailfirst ,	
+            [switch]$mailfirst ,
             [switch]$maillast ,
             [string]$maxage ,
             [string]$minsize ,
@@ -1604,26 +1604,26 @@ function Log-Rotate {
             [string]$tabooext,
             [switch]$weekly,
             [switch]$yearly,
-    
+
             [switch]$force
         )
-    
+
         # Validates options for a block
-        begin 
+        begin
         {
             # Unpack this block's properties
             $blockpath = $block.Path
             $logfiles = $block.Logfiles
-            
+
             if ($g_debugFlag -band 4) { Write-Debug "[Process-Local-Block] Verbose stream: $VerbosePreference" }
-            if ($g_debugFlag -band 4) { Write-Debug "[Process-Local-Block] Debug stream: $DebugPreference" } 
+            if ($g_debugFlag -band 4) { Write-Debug "[Process-Local-Block] Debug stream: $DebugPreference" }
             if ($g_debugFlag -band 4) { Write-Debug "[Process-Local-Block] Erroraction: $ErrorActionPreference" }
-            
+
             # $PSBoundParameters automatic variable is a hashtable containing all bound parameters (keys) and their arguments(values). These are our options.
             $options = $PSBoundParameters
-            
+
             # Override options where overrides exist in this local block
-            
+
             # Don't do any of the following if we defined so
             $options['compress'] = if ($nocompress) { $false } else { $compress }
             $options['copy'] = if ($nocopy) { $false } else { $copy }
@@ -1637,12 +1637,12 @@ function Log-Rotate {
             $options['olddir'] = if ($noolddir) { '' } else { $olddir }
             $options['sharedscripts'] = if ($nosharedscripts) { $false } else { $sharedscripts }
             $options['shred'] = if ($noshred) { $false } else { $shred }
-    
+
             # Compress extension
             $options['compressext']  =  if ($options['compress']) {
-                                            if ($compressext) { 
+                                            if ($compressext) {
                                                 # Use the specified compression file extension
-                                                $compressext 
+                                                $compressext
                                             }else {
                                                 # Try and guess the compression file extension to use
                                                 if ($compresscmd -match '7za?') {
@@ -1669,7 +1669,7 @@ function Log-Rotate {
                     Write-Error "Skipping log pattern $blockpath because there are invalid characters in option 'dateext'." -ErrorAction Stop
                 }
             }
-    
+
             # Validate / redefine size
             # Exit here, if invalid!
             if ($size) {
@@ -1684,7 +1684,7 @@ function Log-Rotate {
                     Write-Error "Skipping log pattern $blockpath because of an invalid 'size' option. $(Get-Exception-Message $_)" -ErrorAction Stop
                 }
             }
-    
+
             if ($minsize) {
                 try {
                     $_minsize_bytes = Get-Size-Bytes $minsize
@@ -1699,9 +1699,9 @@ function Log-Rotate {
                 }
             }
         }
-        
+
         # Constructs Log Objects for log files determined to be rotated. Rotates those logs.
-        process 
+        process
         {
             #try {
                 # Status Messages
@@ -1727,7 +1727,7 @@ function Log-Rotate {
                 Write-Verbose $_msg
 
                 if ($logfiles.Count) {
-                    # Get an array of Log Objects of to-be-rotated log files. 
+                    # Get an array of Log Objects of to-be-rotated log files.
                     $_logsToRotate = New-Object System.Collections.ArrayList
                     foreach ($logfile in $logfiles) {
                         Write-Verbose "Considering log $($logfile.FullName)"
@@ -1743,10 +1743,10 @@ function Log-Rotate {
                             Write-Error "Skipping over processing log $($logfile.FullName) because $(Get-Exception-Message $_)" -ErrorAction Continue
                         }
                     }
-    
+
                     # These Log Objects should be rotated. Rotate them.
                     if ($_logsToRotate.Count -gt 0) {
-                        # Run any firstaction/endscript 
+                        # Run any firstaction/endscript
                         if ($firstaction) {
                             try {
                                 Write-Verbose "Running firstaction script"
@@ -1755,7 +1755,7 @@ function Log-Rotate {
                                 Write-Error "Failed to run firstaction script for $blockpath because $(Get-Exception-Message $_)" -ErrorAction Stop
                             }
                         }
-    
+
                         # For sharedscripts, prerotate and postrotate scripts are run once, immediately before and after all of this block's logs are rotated.
                         # For nosharedscripts, prerotate and postrotate scripts run for each log, immediately before and after it is rotated.
                         if ($sharedscripts) {
@@ -1768,7 +1768,7 @@ function Log-Rotate {
                                     Write-Error "Failed to rotate log $($log['logfile'].FullName). $(Get-Exception-Message $_)" -ErrorAction Continue
                                 }
                             }
-    
+
                             # Run any prerotate/endscript, only if using sharedscripts
                             if ( $prerotate -and ($false -notin $_logsToRotate.status.preprerotate) ) {
                                 try {
@@ -1778,7 +1778,7 @@ function Log-Rotate {
                                     Write-Error "Failed to run shared prerotate script for $blockpath. $(Get-Exception-Message $_)" -ErrorAction Stop
                                 }
                             }
-    
+
                             # It's time to rotate each of these Log Objects
                             $_logsToRotate | Where-Object { $_.status.preprerotate -eq $true } | ForEach-Object {
                                 try {
@@ -1788,7 +1788,7 @@ function Log-Rotate {
                                     Write-Error "Failed to rotate log $($log['logfile'].FullName). $(Get-Exception-Message $_)" -ErrorAction Continue
                                 }
                             }
-    
+
                             # Run any postrotate/endscript, only if using sharedscripts
                             if ( $postrotate -and ($false -notin $_logsToRotate.status.rotate) ) {
                                 try {
@@ -1798,7 +1798,7 @@ function Log-Rotate {
                                     Write-Error "Failed to run shared postrotate script for $blockpath. $(Get-Exception-Message $_)" -ErrorAction Stop
                                 }
                             }
-    
+
                             # Do PostPostRotate
                             $_logsToRotate | Where-Object { $_.status.preprerotate -eq $true -and $_.status.rotate -eq $true } | ForEach-Object {
                                 try {
@@ -1810,7 +1810,7 @@ function Log-Rotate {
                             }
                         }else {
                             $_logsToRotate | ForEach-Object {
-                                # For each log to rotate: move step-by-step but dont continue if a step is unsuccessful. 
+                                # For each log to rotate: move step-by-step but dont continue if a step is unsuccessful.
                                 try {
                                     $_.PrePrerotate() -and
                                     ( !$prerotate -or ($prerotate -and $_.Prerotate()) ) -and
@@ -1822,9 +1822,9 @@ function Log-Rotate {
                                 }
                             }
                         }
-    
+
                         # Run any lastaction/endscript
-                        if ($lastaction) { 
+                        if ($lastaction) {
                             try {
                                 Write-Verbose "Running lastaction script" -ErrorAction Stop
                                 Start-Script $lastaction $blockpath -ErrorAction Stop
@@ -1838,7 +1838,7 @@ function Log-Rotate {
                             Write-Verbose "Not running prerotate script, since no logs will be rotated"
                             Write-Verbose "Not running postrotate script, since no logs will be rotated"
                             Write-Verbose "Not running last action script, since no logs will be rotated"
-                        } 
+                        }
                     }
                 }else {
                     Write-Verbose "Did not find any logs for path $logpath"
@@ -1846,16 +1846,18 @@ function Log-Rotate {
             #}catch {
             #    Write-Error $_.Exception.Message -ErrorAction Stop
             #}
-            
+
         }
         end {
         }
     }
 
-    try {   
+    try {
         Write-Verbose "------------------------------ Log-Rotate --------------------------------------"
-		# Will always reflect the calling script's path, even when used as a Module
-        Write-Verbose "Script root: $( Split-Path -parent $MyInvocation.PSCommandPath )"
+        # Will always reflect the calling script's path, even when used as a Module
+        if ($MyInvocation.PSCommandPath) {
+            Write-Verbose "Script root: $( Split-Path -parent $MyInvocation.PSCommandPath )"
+        }
         #Write-Verbose "Current working directory: $( Convert-Path . )"
         Write-Verbose "Current working directory: $( $(Get-Location).Path )"
 
@@ -1866,7 +1868,7 @@ function Log-Rotate {
         if ($g_debugFlag -band 4) { Write-Debug "g_debugFlag: $g_debugFlag" }
         if ($g_debugFlag -band 4) { Write-Debug "CallerEA: $CallerEA" }
         if ($g_debugFlag -band 4) { Write-Debug "ErrorActionPreference: $ErrorActionPreference" }
-        
+
         # Get the configuration as a string
         if ($ConfigAsString) {
             # Pipelined string. Keep going
@@ -1878,8 +1880,8 @@ function Log-Rotate {
                 $Config | ForEach-Object {
                     # Path has to be valid
                     if (Test-Path $_) {
-                        
-                        $item = Get-Item $_ 
+
+                        $item = Get-Item $_
                         if ($item.PSIsContainer) {
                             # It's a directory. Consider all child files as config files.
                             Get-ChildItem $item.FullName -File | ForEach-Object {
@@ -1953,7 +1955,7 @@ function Log-Rotate {
                 'rotate' = 4
                 'start' = 1
                 'tabooext' = '.rpmorig, .rpmsave, .swp, .rpmnew, ~, .cfsaved, .rhn-cfg-tmp-*.'
-                
+
                 'force' = $force
             }
             'Blocks' = [ordered]@{}
@@ -1968,9 +1970,9 @@ function Log-Rotate {
                         [string[]]$options_not_switches
                     )
                     if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Options] Verbose stream: $VerbosePreference" }
-                    if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Options] Debug stream: $DebugPreference" } 
+                    if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Options] Debug stream: $DebugPreference" }
                     if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Options] Erroraction: $ErrorActionPreference" }
-            
+
                     $matches = $options_allowed_regex.Matches($configString)
                     if ($matches.success) {
                         $matches | ForEach-Object {
@@ -1978,16 +1980,16 @@ function Log-Rotate {
                             $match = $_
                             $key = if ($match.Groups[1].Value) { $match.Groups[1].Value } else { $match.Groups[3].Value }
                             $value = if ($match.Groups[2].Value) { $match.Groups[2].Value } else { $match.Groups[4].Value }
-                
+
                             #Write-Verbose "`nLine: $line"
                             #Write-Verbose "key: $key"
                             #Write-Verbose "value: $value"
                             #Write-Verbose "Contains: $($options_allowed.Contains($key))"
-                
+
                             # Store this option to hashtable. If there are duplicate options, later override earlier ones.
                             if ($key) {
                                 if ($options_allowed.Contains($key)) {
-                                    $options_found[$key] = if ($options_not_switches.Contains($key)) { 
+                                    $options_found[$key] = if ($options_not_switches.Contains($key)) {
                                                                 # Don't trim if it's an option with a multiline value
                                                                 if (!$g_options_not_singleline.Contains($key)) {
                                                                     $value.Trim()
@@ -2019,7 +2021,7 @@ function Log-Rotate {
                     $g_no_yes.GetEnumerator() | ForEach-Object {
                         $no = $_.Name
                         $yes = $_.Value
-                        
+
                         if ( $child.ContainsKey($yes) -and (!$child.ContainsKey($no)) -and $parent.ContainsKey($no) ) {
                             if ($g_debugFlag -band 4) { Write-Verbose "I said $yes, I didn't say $no, although my parent said $no, I'll still go ahead." }
                             $my_options.Remove($no)
@@ -2033,7 +2035,7 @@ function Log-Rotate {
                     param ([object]$blockObject)
 
                     if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Block-Logs] Verbose stream: $VerbosePreference" }
-                    if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Block-Logs] Debug stream: $DebugPreference" } 
+                    if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Block-Logs] Debug stream: $DebugPreference" }
                     if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Block-Logs] Erroraction: $ErrorActionPreference" }
 
                     $blockpath = $blockObject['Path']
@@ -2061,7 +2063,7 @@ function Log-Rotate {
                     foreach ($logpath in $logpaths) {
                         # Test if the path (without any wildcards) exists
                         if ($logpath -match '\*') {
-                            
+
                             # It's a wildcarded path.
                             Write-Verbose "Considering wildcarded path $logpath"
 
@@ -2111,18 +2113,18 @@ function Log-Rotate {
                             }
                         }
                     }
-                    
+
                     $logfiles
                 }
-                
+
             }
         }
         $BlockFactory | Add-Member -Name 'Create' -MemberType ScriptMethod -Value {
             param ([string]$FullConfig)
 
             if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Create] Verbose stream: $VerbosePreference" }
-            if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Create] Debug stream: $DebugPreference" } 
-            if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Create] Erroraction: $ErrorActionPreference" } 
+            if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Create] Debug stream: $DebugPreference" }
+            if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Create] Erroraction: $ErrorActionPreference" }
 
             # Unpack my properties
             . $this.Constants
@@ -2133,7 +2135,7 @@ function Log-Rotate {
             # Parse Full Config for global options as hashtable
             if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Create][Getting global options]" }
             $globalconfig = $g_localconfigs_regex.Replace($FullConfig, '')
-            Get-Options $globalconfig $this.GlobalOptions $g_globaloptions_allowed $g_globaloptions_allowed_regex $g_options_not_switches    
+            Get-Options $globalconfig $this.GlobalOptions $g_globaloptions_allowed $g_globaloptions_allowed_regex $g_options_not_switches
 
             # Parse Full Config for all found local block(s) path pattern, options, and matching log files, storing them as hashtable. Override the global options.
             # TODO: Regex for localconfigs to match paths on multiple lines before { }
@@ -2178,34 +2180,46 @@ function Log-Rotate {
         $LogFactory = [PSCustomObject]@{
             'LogObjects' = New-Object System.Collections.ArrayList
             'Status' = @{}
-            'StatusFile_FullName' = "$( Split-Path -parent $MyInvocation.PSCommandPath )$([IO.Path]::DirectorySeparatorChar)Log-Rotate.status"
+            'StatusFile_FullName' = if ( $MyInvocation.PSCommandPath ) {
+                                        # Use the calling script's directory if so
+                                        "$( Split-Path $MyInvocation.PSCommandPath -parent )$( [IO.Path]::DirectorySeparatorChar )Log-Rotate.status"
+                                    }else {
+                                        # Or fallback on the current working directory
+                                        Join-Path $(Get-Location) 'Log-Rotate.status'
+                                    }
         }
         $LogFactory | Add-Member -Name 'InitStatus' -MemberType ScriptMethod -Value {
-            param ([string]$statusfile_path) 
+            param ([string]$statusfile_path)
 
             if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Verbose stream: $VerbosePreference" }
-            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Debug stream: $DebugPreference" } 
-            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Erroraction: $ErrorActionPreference" } 
+            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Debug stream: $DebugPreference" }
+            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Erroraction: $ErrorActionPreference" }
 
             # If no status file is specified, we'll consider it to be in script directory called 'Log-Rotate.status'
             if (!$statusfile_path) {
                 $statusfile_path = $this.StatusFile_FullName
             }
-            
+
             if ($statusfile_path) {
                 # Ensure status file path contains valid characters
                 try {
-                    $exists = Test-Path -LiteralPath $statusfile_path -PathType Leaf -ErrorAction Stop
+                    $exists = Test-Path -LiteralPath $statusfile_path -ErrorAction Stop
                 }catch {
                     # Illegal characters in path
                     throw "STATUSFILE: WARNING: Invalid status file $statusfile_path . $( Get-Exception-Message $_ )"
                 }
 
                 if ($exists) {
+                    # Ensure it's not an existing diretory
+                    $item = Get-Item $statusfile_path -ErrorAction Stop
+                    if ($item.PSIsContainer) {
+                        throw "STATUSFILE: WARNING: Invalid status file $statusfile_path . It points to an existing directory $($item.FullName)."
+                    }
+
                     try {
                         # Make it an absolute path, if it is not
                         $this.StatusFile_FullName = Convert-Path $statusfile_path
-                        
+
                         Write-Verbose "status file: $( $this.StatusFile_FullName )"
 
                         # Read status
@@ -2216,7 +2230,7 @@ function Log-Rotate {
                 }else {
                     # Create a new status file, creating all directories if needed. If a relative path was given, it will be resolved to the current working directory.
                     try {
-                       
+
                         #[io.file]::OpenWrite($statusfile_path).close()
                         $item = New-Item -Path $statusfile_path -ItemType File -Force -ErrorAction Stop
                         if ($item) {
@@ -2227,7 +2241,7 @@ function Log-Rotate {
                             throw
                         }
 
-                        ## NOTE: Not using this, because debugging should also test the creation of a file. 
+                        ## NOTE: Not using this, because debugging should also test the creation of a file.
                         # The reason for using the following code is only because the cmdlets such as Convert-Path, Resolve-Path must point to an existing item.
                         # If debugging didn't create the file, we would have to manually normalize the status file path (i.e. get it's absolute path).
                         <#
@@ -2240,7 +2254,7 @@ function Log-Rotate {
                                 $this.StatusFile_FullName = Join-Path -Path $parent -ChildPath $child
                             }else {
                                 if ( ! [System.IO.Path]::IsPathRooted($statusfile_path) ) {
-                                    # A relative path was provided. 
+                                    # A relative path was provided.
 
                                     # Can't use Convert-Path / Resolve-Path which must point to an existing item
                                     # Build the absolute path to the status file.
@@ -2303,8 +2317,8 @@ function Log-Rotate {
             param ([System.IO.FileInfo]$logfile, [hashtable]$options)
 
             if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Verbose stream: $VerbosePreference" }
-            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Debug stream: $DebugPreference" } 
-            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Erroraction: $ErrorActionPreference" } 
+            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Debug stream: $DebugPreference" }
+            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Erroraction: $ErrorActionPreference" }
 
             function Get-Status([System.IO.FileInfo]$file) {
                 $lastRotationDate = if ($this.Status.ContainsKey($file.FullName)) {
@@ -2314,7 +2328,7 @@ function Log-Rotate {
                                     }
                 [string]$lastRotationDate
             }
-            
+
             $lastRotationDate = Get-Status $logfile
             $_logObject = $LogObject.New($logfile, $options, $lastRotationDate)
             if ($_logObject)  {
@@ -2329,8 +2343,8 @@ function Log-Rotate {
         $LogFactory | Add-Member -Name 'DumpStatus' -MemberType ScriptMethod -Value {
 
             if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][DumpStatus] Verbose stream: $VerbosePreference" }
-            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][DumpStatus] Debug stream: $DebugPreference" } 
-            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][DumpStatus] Erroraction: $ErrorActionPreference" } 
+            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][DumpStatus] Debug stream: $DebugPreference" }
+            if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][DumpStatus] Erroraction: $ErrorActionPreference" }
 
             try {
                 if (!$g_debugFlag) {
@@ -2339,8 +2353,8 @@ function Log-Rotate {
                         $rotationDateISO = $_.Status['rotation_datetime'].ToString('s')
                         $lastRotationDateISO =  if ($this.Status.ContainsKey($_.Logfile.FullName)) {
                                                     $this.Status[$_.Logfile.FullName]
-                                                } else { 
-                                                    '' 
+                                                } else {
+                                                    ''
                                                 }
                         if ( !$lastRotationDateISO -or ($rotationDateISO -gt $lastRotationDateISO) ) {
                             Write-Verbose "Updating status of rotation for log $($_.Logfile.FullName) "
@@ -2349,7 +2363,7 @@ function Log-Rotate {
                             Write-Verbose "Not updating status of rotation for log $($_.Logfile.FullName) "
                         }
                     }
-                
+
                     # Dump state file
                     Write-Verbose "Writing status file to $($this.StatusFile_FullName)"
                     $output = "Log-Rotate state - version $LogRotateVersion"
@@ -2368,18 +2382,18 @@ function Log-Rotate {
 
         # Compile our Full Config
         $FullConfig = Compile-Full-Config $MultipleConfig
-        
+
         # Validate our Full Config
         Validate-Full-Config $FullConfig
 
         # Create Blocks from our Full Config
         $BlockFactory.Create($FullConfig)
-        
+
         # Initialize our Rotation Status
         $LogFactory.InitStatus($State)
 
         $count = 0
-        $BlockFactory.GetAll().GetEnumerator() | ForEach-Object { 
+        $BlockFactory.GetAll().GetEnumerator() | ForEach-Object {
             $count += $_.Value.LogFiles.Count
         }
         Write-Verbose "Handling $count logs"
@@ -2389,7 +2403,7 @@ function Log-Rotate {
             # This block object.
             $block = $_.Value
             $blockoptions = $block.Options
-        
+
             # Rotate each log of this block
             Process-Local-Block -block $block @blockoptions
         }
