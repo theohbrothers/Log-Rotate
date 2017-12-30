@@ -1379,18 +1379,18 @@ function Log-Rotate {
     }
 
     # Prints miscellaneous information and exits
-    $LogRotateVersion = '1.10'
+    $LogRotateVersion = '1.11'
     if ($Version) {
         Write-Output "Log-Rotate $LogRotateVersion"
-        exit
+        return
     }
     if ($Help) {
         Write-Output (Get-Help Log-Rotate -Full)
-        exit
+        return
     }
     if ($Usage) {
         Write-Output (Get-Help Log-Rotate)
-        exit
+        return
     }
     function Compile-Full-Config {
         param ([string]$MultipleConfig)
@@ -1875,6 +1875,9 @@ function Log-Rotate {
             $MultipleConfig = $ConfigAsString
         }else {
             # No pipeline string. From this point on $Config has to be an array of: a path to a config file, or directory containing config files.
+            if (!$Config) {
+                Write-Error "No config file(s) specified." -ErrorAction Stop
+            }
             try {
                 $MultipleConfig = ''
                 $Config | ForEach-Object {
