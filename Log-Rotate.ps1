@@ -44,8 +44,9 @@ C:\inetpub\logs\iis\mylogs\*.log {
     dateext
     delaycompress
     prerotate
-        Write-Host "I am a script and my log file's full path is: $($Args[0]). I could email my log using Powershell"
-        #$content = Get-Content $Args[0] -Raw
+        # My shell is powershell
+        Write-Host "I am a script and my log file's full path is: $($Args[1]). I could email my log using Powershell"
+        #$content = Get-Content $Args[1] -Raw
         #Send-MailMessage -Body $content .....
     endscript
 }
@@ -56,8 +57,9 @@ C:\inetpub\logs\iis\mylogs\*.log {
     compressoptions a -t7z
     compressext .7z
     postrotate
+        # My shell is sh
         /usr/bin/killall -HUP httpd
-        echo "I am a script and my log file's full path is ${0}"
+        echo "I am a script and my log file's full path is ${1}"
         #sendmail -s .....
     endscript
 }

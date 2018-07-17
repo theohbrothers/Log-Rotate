@@ -85,6 +85,10 @@ size 1M
     "C:\inetpub\logs\access.log" {
         rotate 365
         size 10M
+        postrotate
+            # My shell is powershell
+            Write-Host "Rotated $( $Args[1] )"
+        endscript
     }
     '@
 
@@ -108,7 +112,9 @@ size 1M
         rotate 365
         size 10M
         postrotate
+            # My shell is sh
             /usr/bin/killall -HUP httpd
+            echo "Rotated ${1}"
         endscript
     }
     '@
