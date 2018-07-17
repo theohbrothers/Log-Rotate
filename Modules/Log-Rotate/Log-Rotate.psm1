@@ -2239,6 +2239,7 @@ function Log-Rotate {
                         if ($item) {
                             # Store state file fullname (absolute path).
                             $this.StatusFile_FullName = $item.FullName
+                            "Log-Rotate state - version $LogRotateVersion" | Out-File $this.StatusFile_FullName -Encoding utf8 -Force
                             Write-Verbose "new status file created: $( $this.StatusFile_FullName )"
                         }else {
                             throw
