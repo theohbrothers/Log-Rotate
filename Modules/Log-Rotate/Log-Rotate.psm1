@@ -1,4 +1,4 @@
-﻿function Get-Size-Bytes {
+function Get-Size-Bytes {
     # Returns a size specified with a unit (E.g. 100, 100k, 100M, 100G) into bytes without a unit
     param ([string]$size_str)
     if ($g_debugFlag -band 4) { Write-Debug "[Get-Size-Bytes] Verbose stream: $VerbosePreference" }
@@ -2239,7 +2239,7 @@ function Log-Rotate {
                         if ($item) {
                             # Store state file fullname (absolute path).
                             $this.StatusFile_FullName = $item.FullName
-                            "Log-Rotate state - version $LogRotateVersion" | Out-File $this.StatusFile_FullName -Encoding utf8 -Force
+                            $this.DumpStatus()
                             Write-Verbose "new status file created: $( $this.StatusFile_FullName )"
                         }else {
                             throw

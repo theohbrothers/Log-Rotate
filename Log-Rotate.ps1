@@ -2345,6 +2345,7 @@ function Log-Rotate {
                         if ($item) {
                             # Store state file fullname (absolute path).
                             $this.StatusFile_FullName = $item.FullName
+                            $this.DumpStatus()
                             Write-Verbose "new status file created: $( $this.StatusFile_FullName )"
                         }else {
                             throw
