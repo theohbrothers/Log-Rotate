@@ -1832,14 +1832,10 @@ function Log-Rotate {
                                 try {
                                     # Script output will go down the pipeline
                                     $_.PrePrerotate()
-                                    if ($prerotate) {
-                                        $_.Prerotate()
-                                    }
-                                    $_.RotateMainOnly()
-                                    if ($postrotate) {
-                                        $_.Postrotate()
-                                    }
-                                    $_.PostPostRotate()
+                                    if ( $_.status.preprerotate -and $prerotate ) { $_.Prerotate() }
+                                    if ( $_.status.prerotate ) { $_.RotateMainOnly() }
+                                    if ( $_.status.rotate -and $postrotate ) { $_.Postrotate() }
+                                    if ( $_.status.postrotate ) { $_.PostPostRotate() }
                                 }catch {
                                     Write-Error $(Get-Exception-Message $_) -ErrorAction $CallerEA
                                 }
