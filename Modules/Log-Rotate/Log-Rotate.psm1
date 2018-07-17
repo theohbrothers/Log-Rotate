@@ -299,12 +299,12 @@ $LogObject = [PSCustomObject]@{
 
             # E.g. 7z.exe a -t7z D:\console.log.7z D:\console.log
             # E.g. gzip.exe D:\console.log
-            $compressoptions = $compressoptions.Split(' ') | Where-Object { $_.Trim() }
+            $compressoptions = @( $compressoptions -split '\s' | Where-Object { $_.Trim() } )
 
             $params = if ($compresscmd -match '7z') {
                         $compressoptions + $compressed_fullname + $filter
                       }else {
-                        $compressoptions + $compressed_fullname
+                        $compressoptions + $filter
                       }
             # Remove empty parameters
             $params = $params | Where-Object { $_ }
