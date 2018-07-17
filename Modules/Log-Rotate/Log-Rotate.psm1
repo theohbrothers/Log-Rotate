@@ -1379,7 +1379,7 @@ function Log-Rotate {
     }
 
     # Prints miscellaneous information and exits
-    $LogRotateVersion = '1.11'
+    $LogRotateVersion = '1.2.0'
     if ($Version) {
         Write-Output "Log-Rotate $LogRotateVersion"
         return
