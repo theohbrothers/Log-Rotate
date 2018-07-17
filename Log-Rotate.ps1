@@ -1948,9 +1948,9 @@ function Log-Rotate {
                                     # Script output will go down the pipeline
                                     $_.PrePrerotate()
                                     if ( $_.status.preprerotate -and $prerotate ) { $_.Prerotate() }
-                                    if ( $_.status.prerotate ) { $_.RotateMainOnly() }
+                                    if ( ! $prerotate -or ( $prerotate -and $_.status.prerotate ) ) { $_.RotateMainOnly() }
                                     if ( $_.status.rotate -and $postrotate ) { $_.Postrotate() }
-                                    if ( $_.status.postrotate ) { $_.PostPostRotate() }
+                                    if ( ! $postrotate -or ( $postrotate -and $_.status.postrotate ) ) { $_.PostPostRotate() }
                                 }catch {
                                     Write-Error $(Get-Exception-Message $_) -ErrorAction $CallerEA
                                 }
