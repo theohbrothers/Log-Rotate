@@ -182,13 +182,13 @@ function Start-Script {
                             }
                     $scriptblock = [scriptblock]::Create($script)
                     #$params = '-Command', $scriptblock, '-Args', @($file_FullName)
-                    $output = & $cmd -Command $scriptblock -Args @($file_FullName)
+                    $output = & $cmd -Command $scriptblock -Args @('logrotate_script', $file_FullName)
                 }else {
                     # E.g. sh -c 'echo ${0}' 'D:\console.log'
 
                     # & operator: When we use & $cmd $param, powershell wraps args containing spaces with double-quotes, so we need escape inner double-quotes
                     $cmd = 'sh'
-                    $params = '-c', $script.Replace('"', '\"'), $file_FullName
+                    $params = '-c', $script.Replace('"', '\"'), 'logrotate_script', $file_FullName
                     $output = & $cmd $params
 
                     # TODO: Not using jobs for now, because they are slow.
@@ -196,6 +196,13 @@ function Start-Script {
                 }
 
                 Write-Verbose "Script output: `n$output"
+
+                # Done. Send output down the pipeline. If not, send the success of the script down the pipeline
+                if ( $LASTEXITCODE ) {
+                    Write-Verbose "Script exited with exit code: $LASTEXITCODE"
+                    throw "Script failed with errors."
+                }
+                $output
 
                 # TODO: Not using jobs for now, because they are slow.
                 <#
@@ -211,7 +218,7 @@ function Start-Script {
                 #>
             }
         }catch {
-            Write-Error "Failed to execute script for $file_FullName. `nError: $_ `nScript (possibly with errors): $script" -ErrorAction $callerEA
+            throw "Failed to execute script for $file_FullName. `nError: $_ `nScript (possibly with errors): $script"
         }
     }
 }
@@ -286,7 +293,7 @@ $LogObject = [PSCustomObject]@{
                     }
                 }
             }catch {
-                throw $_
+                throw
             }
 
             $false
@@ -563,7 +570,7 @@ $LogObject = [PSCustomObject]@{
                 if ($preremove) {
                     Write-Verbose "Running preremove script"
                     try {
-                        Start-Script $preremove $file_fullname -ErrorAction Continue
+                        Start-Script $preremove $file_fullname -ErrorAction $CallerEA
                     }catch {
                         throw "Failed to run preremove script. $(Get-Exception-Message $_)"
                     }
@@ -1196,7 +1203,8 @@ $LogObject | Add-Member -Name 'PrePrerotate' -MemberType ScriptMethod -Value {
 
     } # End if ($compress)
 
-    $this.Status.preprerotate
+    # Removed this - Script will spit stdout on the Pipeline
+    #$this.Status.preprerotate
 }
 $LogObject | Add-Member -Name 'Prerotate' -MemberType ScriptMethod -Value {
     if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Prerotate] Verbose stream: $VerbosePreference" }
@@ -1218,7 +1226,8 @@ $LogObject | Add-Member -Name 'Prerotate' -MemberType ScriptMethod -Value {
         $this.Status.prerotate = $true
     }
 
-    $this.Status.prerotate
+    # Removed this - Script will spit stdout on the Pipeline
+    #$this.Status.prerotate
 }
 $LogObject | Add-Member -Name 'RotateMainOnly' -MemberType ScriptMethod -Value {
     if ($g_debugFlag -band 4) { Write-Debug "[LogObject][RotateMainOnly] Verbose stream: $VerbosePreference" }
@@ -1238,7 +1247,8 @@ $LogObject | Add-Member -Name 'RotateMainOnly' -MemberType ScriptMethod -Value {
     . $this.PrivateMethods
 
     $this.Status.rotate = Rotate-Main
-    $this.Status.rotate
+    # Removed this - Script will spit stdout on the Pipeline
+    #$this.Status.rotate
 }
 $LogObject | Add-Member -Name 'Postrotate' -MemberType ScriptMethod -Value {
     if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Postrotate] Verbose stream: $VerbosePreference" }
@@ -1252,14 +1262,15 @@ $LogObject | Add-Member -Name 'Postrotate' -MemberType ScriptMethod -Value {
     if ($postrotate) {
         Write-Verbose "Running postrotate script"
         try {
-            Start-Script $postrotate $my_fullname -ErrorAction Stop
+            Start-Script $postrotate $my_fullname -ErrorAction $CallerEA
         }catch {
             throw "Failed to run postrotate script. $(Get-Exception-Message $_)"
         }
         $this.Status.postrotate = $true
     }
 
-    $this.Status.postrotate
+    # Removed this - Script will spit stdout on the Pipeline
+    #$this.Status.postrotate
 }
 $LogObject | Add-Member -Name 'PostPostRotate' -MemberType ScriptMethod -Value {
     if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PostPostRotate] Verbose stream: $VerbosePreference" }
@@ -1351,7 +1362,8 @@ $LogObject | Add-Member -Name 'PostPostRotate' -MemberType ScriptMethod -Value {
 
     } # End if ($compress)
 
-    $this.Status.postpostrotate
+    # Removed this - Script will spit stdout on the Pipeline
+    #$this.Status.postpostrotate
 }
 
 # Log-Rotate Cmdlet
@@ -1855,10 +1867,11 @@ function Log-Rotate {
                         # Run any firstaction/endscript
                         if ($firstaction) {
                             try {
+                                # Script output will go down the pipeline
                                 Write-Verbose "Running firstaction script"
-                                Start-Script $firstaction $blockpath -ErrorAction Stop
+                                Start-Script $firstaction $blockpath -ErrorAction $CallerEA
                             }catch {
-                                Write-Error "Failed to run firstaction script for $blockpath because $(Get-Exception-Message $_)" -ErrorAction Stop
+                                Write-Error "Failed to run firstaction script for $blockpath because $(Get-Exception-Message $_)" -ErrorAction $CallerEA
                             }
                         }
 
@@ -1868,8 +1881,9 @@ function Log-Rotate {
                             # Do PrePrerotate
                             $_logsToRotate | ForEach-Object {
                                 try {
+                                    # Script output will go down the pipeline
                                     $log = $_
-                                    $log.PrePrerotate() | Out-Null
+                                    $log.PrePrerotate()
                                 }catch {
                                     Write-Error "Failed to rotate log $($log['logfile'].FullName). $(Get-Exception-Message $_)" -ErrorAction Continue
                                 }
@@ -1878,8 +1892,9 @@ function Log-Rotate {
                             # Run any prerotate/endscript, only if using sharedscripts
                             if ( $prerotate -and ($false -notin $_logsToRotate.status.preprerotate) ) {
                                 try {
+                                    # Script output will go down the pipeline
                                     Write-Verbose "Running shared prerotate script"
-                                    Start-Script $prerotate $blockpath -ErrorAction Stop
+                                    Start-Script $prerotate $blockpath -ErrorAction $CallerEA
                                 }catch {
                                     Write-Error "Failed to run shared prerotate script for $blockpath. $(Get-Exception-Message $_)" -ErrorAction Stop
                                 }
@@ -1888,8 +1903,9 @@ function Log-Rotate {
                             # It's time to rotate each of these Log Objects
                             $_logsToRotate | Where-Object { $_.status.preprerotate -eq $true } | ForEach-Object {
                                 try {
+                                    # Script output will go down the pipeline
                                     $log = $_
-                                    $log.RotateMainOnly() | Out-Null
+                                    $log.RotateMainOnly()
                                 }catch {
                                     Write-Error "Failed to rotate log $($log['logfile'].FullName). $(Get-Exception-Message $_)" -ErrorAction Continue
                                 }
@@ -1899,7 +1915,8 @@ function Log-Rotate {
                             if ( $postrotate -and ($false -notin $_logsToRotate.status.rotate) ) {
                                 try {
                                     Write-Verbose "Running shared postrotate script"
-                                    Start-Script $postrotate $blockpath -ErrorAction Stop
+                                    # Script output will go down the pipeline
+                                    Start-Script $postrotate $blockpath -ErrorAction $CallerEA
                                 }catch {
                                     Write-Error "Failed to run shared postrotate script for $blockpath. $(Get-Exception-Message $_)" -ErrorAction Stop
                                 }
@@ -1908,8 +1925,9 @@ function Log-Rotate {
                             # Do PostPostRotate
                             $_logsToRotate | Where-Object { $_.status.preprerotate -eq $true -and $_.status.rotate -eq $true } | ForEach-Object {
                                 try {
+                                    # Script output will go down the pipeline
                                     $log = $_
-                                    $log.PostPostRotate() | Out-Null
+                                    $log.PostPostRotate()
                                 }catch {
                                     Write-Error "Failed to rotate log $($log['logfile'].FullName). $(Get-Exception-Message $_)" -ErrorAction Continue
                                 }
@@ -1918,13 +1936,18 @@ function Log-Rotate {
                             $_logsToRotate | ForEach-Object {
                                 # For each log to rotate: move step-by-step but dont continue if a step is unsuccessful.
                                 try {
-                                    $_.PrePrerotate() -and
-                                    ( !$prerotate -or ($prerotate -and $_.Prerotate()) ) -and
-                                    $_.RotateMainOnly() -and
-                                    ( !$postrotate -or ($postrotate -and $_.Postrotate()) ) -and
-                                    $_.PostPostRotate() | Out-Null
+                                    # Script output will go down the pipeline
+                                    $_.PrePrerotate()
+                                    if ($prerotate) {
+                                        $_.Prerotate()
+                                    }
+                                    $_.RotateMainOnly()
+                                    if ($postrotate) {
+                                        $_.Postrotate()
+                                    }
+                                    $_.PostPostRotate()
                                 }catch {
-                                    Write-Error $(Get-Exception-Message $_) -ErrorAction Continue
+                                    Write-Error $(Get-Exception-Message $_) -ErrorAction $CallerEA
                                 }
                             }
                         }
@@ -1932,8 +1955,9 @@ function Log-Rotate {
                         # Run any lastaction/endscript
                         if ($lastaction) {
                             try {
+                                # Script output will go down the pipeline
                                 Write-Verbose "Running lastaction script" -ErrorAction Stop
-                                Start-Script $lastaction $blockpath -ErrorAction Stop
+                                Start-Script $lastaction $blockpath -ErrorAction $CallerEA
                             }catch {
                                 Write-Error "Failed to run lastaction script for $blockpath. $(Get-Exception-Message $_)" -ErrorAction Stop
                             }
@@ -2537,5 +2561,11 @@ $params = @{
     'Verbose' = $true
     'ErrorAction' = 'Stop'
 }
+
+# Override with developer config
+if ($Args[0] -is [hashtable]) {
+    $params = $Args[0]
+}
+
 # Call by splatting
 Log-Rotate @params
