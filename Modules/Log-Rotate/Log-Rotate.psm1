@@ -1390,6 +1390,13 @@ function Log-Rotate {
         $DebugPreference = 'SilentlyContinue'
     }
 
+    # PS Defaults
+    $PSDefaultParameterValues['*-Content:Force'] = $true
+    $PSDefaultParameterValues['*-Item:Force'] = $true
+    $PSDefaultParameterValues['Get-ChildItem:Force'] = $true
+    $PSDefaultParameterValues['Out-File:Force'] = $true
+    $PSDefaultParameterValues['Invoke-Command:ErrorAction'] = 'Stop'
+
     # Prints miscellaneous information and exits
     $LogRotateVersion = '1.2.0'
     if ($Version) {
