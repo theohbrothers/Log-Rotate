@@ -426,6 +426,7 @@ $LogObject = [PSCustomObject]@{
 
             try {
                 Write-Verbose "Compressing log with: $compresscmd"
+                Write-Verbose "Compress command line: $compresscmd $( $params -join ' ' )"
                 if ($g_debugFlag) {
                     return
                 }

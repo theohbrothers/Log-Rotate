@@ -318,6 +318,7 @@ $LogObject = [PSCustomObject]@{
 
             try {
                 Write-Verbose "Compressing log with: $compresscmd"
+                Write-Verbose "Compress command line: $compresscmd $( $params -join ' ' )"
                 if ($g_debugFlag) {
                     return
                 }
@@ -1398,7 +1399,7 @@ function Log-Rotate {
     $PSDefaultParameterValues['Invoke-Command:ErrorAction'] = 'Stop'
 
     # Prints miscellaneous information and exits
-    $LogRotateVersion = '1.2.0'
+    $LogRotateVersion = '1.2.1'
     if ($Version) {
         Write-Output "Log-Rotate $LogRotateVersion"
         return
