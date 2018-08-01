@@ -1399,7 +1399,7 @@ function Log-Rotate {
     $PSDefaultParameterValues['Invoke-Command:ErrorAction'] = 'Stop'
 
     # Prints miscellaneous information and exits
-    $LogRotateVersion = '1.2.1'
+    $LogRotateVersion = '1.2.2'
     if ($Version) {
         Write-Output "Log-Rotate $LogRotateVersion"
         return
