@@ -4,22 +4,26 @@ A replica of the [logrotate utility](https://github.com/logrotate/logrotate  "lo
 
 It can be used as a *Powershell Script* or *Module*.
 
-## Requirements:
+## Requirements
+
 - <a href="https://github.com/PowerShell/PowerShell#get-powershell" target="_blank" title="Powershell">Powershell v3</a>
 - `Windows`or  `*nix` environment
 - User with `read` `write` `modify` (or `rwx`) permissions on script directory
 
 ## The similarities
+
 - Same command line
 - Same config file format, meaning you can re-use your *nix configs
 - Same rotation logic
 
 ## The differences
+
 - **Powershell** means you can run it on  **Windows** and ***nix**
 - A **Powershell module** means you can easily call it from other scripts
 - A **Powershell script** means great portability and flexibility of deployment to isolated environments
 
 ## Who should use it?
+
 - Anyone working with `Windows` and have trouble with managing tons of log files from various applications
 - Anyone who works a lot in `Powershell` automation, and love the fact you can pipe configs to a *module* that runs like a *binary*.
 - Those who love the option of having *portable* log rotation scripts that follow the rotation logic of `logrotate`.
@@ -27,34 +31,40 @@ It can be used as a *Powershell Script* or *Module*.
 - Anyone on `Windows` who misses that `logrotate` on `*nix`
 
 ## How to use
+
 `Log-Rotate` can be used as a *script*, a *module*, or a *Task / Cron job* (as with *nix's logrotate).
+
 ### As a Script
+
 1. Open `Log-Rotate.ps1` in your favourite text editor and add your configuration inside `$myConfig`:
 
-```powershell
-$myConfig = @'
-##### Start adding Config here #####
-# Global options
-size 1M
+    ```powershell
+    $myConfig = @'
+    ##### Start adding Config here #####
+    # Global options
+    size 1M
 
-# Block options
-"C:\inetpub\logs\iis\mylogs\*.log" D:\console.log {
-    rotate 365
-    dateext
-    ...
-}
-##### End adding #####
-@'
-```
+    # Block options
+    "C:\inetpub\logs\iis\mylogs\*.log" D:\console.log {
+        rotate 365
+        dateext
+        ...
+    }
+    ##### End adding #####
+    '@
+    ```
 
 2. Run the script:
-- WinNT: Right click on the script in `Explorer` and select <code>Run with Powershell</code>. (should be present on Windows 7 and up). Alternatively, open `Command Prompt` in the script directory, and run <code>Powershell .\Log-Rotate.ps1</code>
-- *nix: Run <code>powershell ./Log-Rotate.ps1</code> or <code>pwsh ./Log-Rotate.ps1</code> depending on which version of powershell you're running.
+
+    - WinNT: Right click on the script in `Explorer` and select `Run with Powershell`. (should be present on Windows 7 and up). Alternatively, open `Command Prompt` in the script directory, and run `Powershell .\Log-Rotate.ps1`
+    - *nix: Run `powershell ./Log-Rotate.ps1` or `pwsh ./Log-Rotate.ps1` depending on which version of powershell you're running.
 
 ### As a Module
+
 1. [Install](https://msdn.microsoft.com/en-us/library/dd878350(v=vs.85).aspx) the `Log-Rotate.psm1` module into **any** of the following directories:
 
     *Windows*
+
     ```powershell
     %Windir%\System32\WindowsPowerShell\v1.0\Modules
 
@@ -64,6 +74,7 @@ size 1M
     ```
 
     **nix*
+
     > Note: These may vary between *nix distros. Check `$Env:PSModulePath` inside `Powershell`.
 
     ```powershell
@@ -77,6 +88,7 @@ size 1M
 2. Import the module, then pipe the config into the module:
 
     *Windows*
+
     ```powershell
     Import-Module Log-Rotate
 
@@ -103,6 +115,7 @@ size 1M
     ```
 
     **nix*
+
     ```powershell
     Import-Module Log-Rotate
 
@@ -130,18 +143,22 @@ size 1M
     ```
 
 ### As a Task / Cron job
+
 This approach is just like how the original logrotate works. A *main config* is to `include` a folder containing *all configs*.
 
 It requires you [install Log-Rotate as a module](#as-a-module).
 
 #### Windows
+
 A Main config *C:\configs\Log-Rotate\Log-Rotate.conf*, with a single `include` line :
-```
+
+```txt
 include C:\configs\Log-Rotate.d\
 ```
 
 Config files go in *C:\configs\Log-Rotate.d\\* :
-```
+
+```txt
 C:\configs\logrotate.d\
 +-- iis.conf
 +-- apache.conf
@@ -153,23 +170,28 @@ We'll decide to use a `Log-Rotate` *state* file in *C:\var\Log-Rotate\Log-Rotate
 We'll decide to log the *Task* to *C:\logs\Log-Rotate.log*. This file will capture all the Powershell output streams.
 
 Run the Command line with the `-Debug` parameter to make sure everything is working.
+
 ```powershell
 Powershell 'Import-Module Log-Rotate; Log-Rotate -Config "C:\configs\Log-Rotate\Log-Rotate.conf" -State "C:\var\Log-Rotate\Log-Rotate.status" -Verbose -Debug'
 ```
 
-**Task Command line**
+Task Command line:
+
 ```powershell
 Powershell 'Import-Module Log-Rotate; Log-Rotate -Config "C:\configs\Log-Rotate\Log-Rotate.conf" -State "C:\var\Log-Rotate\Log-Rotate.status" -Verbose' >> C:\logs\Log-Rotate.log
 ```
 
 #### *nix
+
 A Main config */etc/Log-Rotate.conf*, with a single `include` line :
-```
+
+```txt
 include /etc/Log-Rotate.d/
 ```
 
 Config files in  */etc/Log-Rotate.d/* :
-```
+
+```txt
 /etc/Log-Rotate.d/
 +-- nginx.conf
 +-- apache.conf
@@ -181,17 +203,21 @@ We'll decide to use a `Log-Rotate` *state* file in */var/lib/Log-Rotate/Log-Rota
 We'll decide to log the *cron* to */var/log/Log-Rotate.log*. This file will capture all the Powershell output streams.
 
 Run the Command line with the `-Debug` parameter to make sure everything is working.
+
 ```powershell
 Powershell 'Import-Module Log-Rotate; Log-Rotate -Config "/etc/Log-Rotate.conf" -State "/var/lib/Log-Rotate/Log-Rotate.status" -Verbose -Debug'
 ```
 
-**Cron command line**
+Cron command line:
+
 ```powershell
 Powershell 'Import-Module Log-Rotate; Log-Rotate -Config "/etc/Log-Rotate.conf" -State "/var/lib/Log-Rotate/Log-Rotate.status" -Verbose' >> /var/log/Log-Rotate.log
 ```
+
 > Note that on certain distros, `Powershell` might be aliased as `pwsh`.
 
 ## Command Line
+
 The command line is kept exactly the same as the original logrotate utility, while adding an additional parameter called `ConfigAsString` that accepts pipeline input.
 
 ```powershell
@@ -239,8 +265,10 @@ PARAMETERS
 ```
 
 ## Capturing output
+
 Because of the pipelining nature of `Powershell`, the `stdout` is used for returning objects.
 To capture streams that output the script's progress, use `*>&1` operator when calling `Log-Rotate` as a *module*, or `>` when calling `Log-Rotate` as a *script*.
+
 ```powershell
 # If using as a module
 Log-Rotate -ConfigAsString $config -State $state -Verbose *>&1 | Out-File -FilePath ./output.log
@@ -250,6 +278,7 @@ Powershell .\Log-Rotate.ps1 > output.log
 ```
 
 ## Missing options
+
 A few less crucial options are left out for `Log-Rotate V1`. The option and their reasons are stated below:
 
 | Option | Explanation |
@@ -261,11 +290,13 @@ A few less crucial options are left out for `Log-Rotate V1`. The option and thei
 ## Additional Information
 
 ### Files
+
 When `Log-Rotate` is used as a **Script**, if the state file is unspecified on the command line, by default a `Log-Rotate` state file named *Log-Rotate.status* is created in the *script directory*.
 
 When `Log-Rotate` is used as a **Module**, if the state file is unspecified on the command line, by default a `Log-Rotate` state file named *Log-Rotate.status* is created in the *calling script's directory* (that is, the directory of the script that executes the `Log-Rotate` command line).
 
 ### Configuration Options
+
 The following discusses how to use certain config options.
 
 |  Option  | Examples | Explanation |
@@ -276,24 +307,31 @@ The following discusses how to use certain config options.
 ## FAQ
 
 ### WinNT
-Q: Help! Upon running the script I am getting an error <code>'File C:\...Log-Rotate.ps1 cannot be loaded because the execution of scripts is disabled on this system. Please see "get-help about_signing" for more details.'</code>
-- You need to allow the execution of unverified scripts. Open Powershell as administrator, type <code>Set-ExecutionPolicy Unrestricted -Force</code> and press ENTER. Try running the script again. You can easily restore the security setting back by using <code>Set-ExecutionPolicy Undefined -Force</code>.
 
-Q: Help! Upon running the script I am getting an error <code>File C:\...Log-Rotate.ps1 cannot be loaded. The file C:\...\Log-Rotate.ps1 is not digitally signed. You cannot run this script on the current system. For more information about running scripts and setting execution policy, see about_Execution_Policies at http://go.microsoft.com/fwlink/?LinkID=135170.</code>
-- You need to allow the execution of unverified scripts. Open Powershell as administrator, type <code>Set-ExecutionPolicy Unrestricted -Force</code> and press ENTER. Try running the script again. You can easily restore the security setting back by using <code>Set-ExecutionPolicy Undefined -Force</code>.
+Q: Help! Upon running the script I am getting an error `'File C:\...Log-Rotate.ps1 cannot be loaded because the execution of scripts is disabled on this system. Please see "get-help about_signing" for more details.'`
 
-Q: Help! Upon running the script I am getting a warning <code>'Execution Policy change. The execution policy helps protect you from scripts that you do not trust. Changing the execution policy might expose you to the security risks described in the about_Execution_Policies help topic at http://go.microsoft.com/?LinkID=135170. Do you want to change the execution policy?</code>
-- You need to allow the execution of unverified scripts. Type <code>Y</code> for yes and press enter. You can easily restore the security setting back opening Powershell as administrator, and using the code <code>Set-ExecutionPolicy Undefined -Force</code>.
+- You need to allow the execution of unverified scripts. Open Powershell as administrator, type `Set-ExecutionPolicy Unrestricted -Force` and press ENTER. Try running the script again. You can easily restore the security setting back by using `Set-ExecutionPolicy Undefined -Force`.
+
+Q: Help! Upon running the script I am getting an error `File C:\...Log-Rotate.ps1 cannot be loaded. The file C:\...\Log-Rotate.ps1 is not digitally signed. You cannot run this script on the current system. For more information about running scripts and setting execution policy, see about_Execution_Policies at http://go.microsoft.com/fwlink/?LinkID=135170.`
+
+- You need to allow the execution of unverified scripts. Open Powershell as administrator, type `Set-ExecutionPolicy Unrestricted -Force` and press ENTER. Try running the script again. You can easily restore the security setting back by using `Set-ExecutionPolicy Undefined -Force`.
+
+Q: Help! Upon running the script I am getting a warning `'Execution Policy change. The execution policy helps protect you from scripts that you do not trust. Changing the execution policy might expose you to the security risks described in the about_Execution_Policies help topic at http://go.microsoft.com/?LinkID=135170. Do you want to change the execution policy?`
+
+- You need to allow the execution of unverified scripts. Type `Y` for yes and press enter. You can easily restore the security setting back opening Powershell as administrator, and using the code `Set-ExecutionPolicy Undefined -Force`.
 
 ### *nix
-Q: Help! I am getting an error `
-Powershell: command not found`.
+
+Q: Help! I am getting an error `Powershell: command not found`.
+
 - `Powershell` is sometimes aliased as `pwsh`, depending on which *nix distro you are on. Try the alias `pwsh`.
 
 ## Known issues
+
 - Nil
 
 ## Background
+
 `Log-Rotate` is replicated from the original [logrotate utility](https://github.com/logrotate/logrotate "logrotate utility"). The code was written by hand and no code was referred to.
 It is made to work in the exact way logrotate would work: Same rotation logic, same outputs, same configurations. But with much more flexibility.
 Best of all, it works on one more platform: **Windows**.
