@@ -267,19 +267,28 @@ PARAMETERS
 ## Capturing output
 
 Because of the pipelining nature of `Powershell`, the `stdout` is used for returning objects.
-To capture streams that output the script's progress, use `*>&1` operator when calling `Log-Rotate` as a *module*, or `>` when calling `Log-Rotate` as a *script*.
+
+To capture streams that output the script's progress from within powershell, use `*>&1` operator :
 
 ```powershell
-# If using as a module
+## Module
 Log-Rotate -ConfigAsString $config -State $state -Verbose *>&1 | Out-File -FilePath ./output.log
+## Script
+.\Log-Rotate.ps1 *>&1 | Out-File -FilePath ./output.log
+```
 
-# If using as a script
-Powershell .\Log-Rotate.ps1 > output.log
+To capture streams that output the script's progress from outside powershell, simply redirect all `stdout` to a file:
+
+```powershell
+## Module
+Powershell -Command 'Log-Rotate -ConfigAsString $config -State $state -Verbose' > output.log
+## Script
+Powershell -Command '.\Log-Rotate.ps1' > output.log
 ```
 
 ## Missing options
 
-A few less crucial options are left out for `Log-Rotate V1`. The option and their reasons are stated below:
+A few less crucial options are left out for `Log-Rotate v1`. The option and their reasons are stated below:
 
 | Option | Explanation |
 :-------:|-------------
