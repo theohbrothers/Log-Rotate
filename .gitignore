@@ -1,4 +1,4 @@
-tests
-debug
-Create-Module.ps1
-Log-Rotate.status
+/.*
+!/.gitignore
+!/.gitattributes
+!/.travis.yml
