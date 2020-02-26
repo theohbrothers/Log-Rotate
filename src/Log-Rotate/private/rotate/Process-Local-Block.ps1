@@ -86,6 +86,9 @@ function Process-Local-Block  {
                                 if ($copy) {
                                     return $true
                                 }
+                                if ($nocopytruncate) {
+                                    return $false
+                                }
                                 if ($copytruncate) {
                                     return $true
                                 }
@@ -223,7 +226,7 @@ function Process-Local-Block  {
 
                     # For sharedscripts, prerotate and postrotate scripts are run once, immediately before and after all of this block's logs are rotated.
                     # For nosharedscripts, prerotate and postrotate scripts run for each log, immediately before and after it is rotated.
-                    if ($sharedscripts) {
+                    if ($options['sharedscripts']) {
                         # Do PrePrerotate
                         $_logsToRotate | ForEach-Object {
                             try {
