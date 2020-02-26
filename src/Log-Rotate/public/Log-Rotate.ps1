@@ -214,6 +214,10 @@ function Log-Rotate {
         # Validate our Full Config
         Validate-Full-Config $FullConfig
 
+        # Instantiate Singletons
+        $BlockFactory = New-BlockFactory
+        $LogFactory = New-LogFactory
+
         # Create Blocks from our Full Config
         $BlockFactory.Create($FullConfig)
 
