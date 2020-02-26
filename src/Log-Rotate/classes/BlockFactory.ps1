@@ -43,6 +43,7 @@ $BlockFactory = [PSCustomObject]@{
         'uncompressoptions' = 'x -t7z'
         'size' = ''
         'dateformat' = '-%Y%m%d'
+        'ifempty' = $true
         'nomissingok' = $true
         'rotate' = 4
         'start' = 1
