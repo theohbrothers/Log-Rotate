@@ -3,6 +3,9 @@ function Get-Size-Bytes {
     param (
         [string]$size_str
     )
+    if (!$size_str) {
+        $size_str = '0'
+    }
     if ($g_debugFlag -band 4) { Write-Debug "[Get-Size-Bytes] Verbose stream: $VerbosePreference" }
     if ($g_debugFlag -band 4) { Write-Debug "[Get-Size-Bytes] Debug stream: $DebugPreference" }
     if ($g_debugFlag -band 4) { Write-Debug "[Get-Size-Bytes] Erroraction: $ErrorActionPreference" }
