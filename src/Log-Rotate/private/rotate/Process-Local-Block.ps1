@@ -79,8 +79,19 @@ function Process-Local-Block  {
 
         # Don't do any of the following if we defined so
         $options['compress'] = if ($nocompress) { $false } else { $compress }
-        $options['copy'] = if ($nocopy) { $false } else { $copy }
-        $options['copytruncate'] = if ($nocopytruncate) {$false } else { $copytruncate }
+        $options['copy'] =  & {
+                                if ($nocopy) {
+                                    return $false
+                                }
+                                if ($copy) {
+                                    return $true
+                                }
+                                if ($copytruncate) {
+                                    return $true
+                                }
+                                $copy
+                            }
+        $options['copytruncate'] = if ($nocopytruncate) { $false } else { $copytruncate }
         $options['create'] = if ($nocreate) { '' } else { $create }
         $options['delaycompress'] = if ($nodelaycompress) { $false } else { $delaycompress }
         $options['dateext'] = if ($nodateext) { $false } else { $dateext }
