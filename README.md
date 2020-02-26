@@ -8,7 +8,6 @@ It can be used as a *Powershell Script* or *Module*.
 
 - <a href="https://github.com/PowerShell/PowerShell#get-powershell" target="_blank" title="Powershell">Powershell v3</a>
 - `Windows`or  `*nix` environment
-- User with `read` `write` `modify` (or `rwx`) permissions on script directory
 
 ## The similarities
 
@@ -32,32 +31,7 @@ It can be used as a *Powershell Script* or *Module*.
 
 ## How to use
 
-`Log-Rotate` can be used as a *script*, a *module*, or a *Task / Cron job* (as with *nix's logrotate).
-
-### As a Script
-
-1. Open `Log-Rotate.ps1` in your favourite text editor and add your configuration inside `$myConfig`:
-
-    ```powershell
-    $myConfig = @'
-    ##### Start adding Config here #####
-    # Global options
-    size 1M
-
-    # Block options
-    "C:\inetpub\logs\iis\mylogs\*.log" D:\console.log {
-        rotate 365
-        dateext
-        ...
-    }
-    ##### End adding #####
-    '@
-    ```
-
-2. Run the script:
-
-    - WinNT: Right click on the script in `Explorer` and select `Run with Powershell`. (should be present on Windows 7 and up). Alternatively, open `Command Prompt` in the script directory, and run `Powershell .\Log-Rotate.ps1`
-    - *nix: Run `powershell ./Log-Rotate.ps1` or `pwsh ./Log-Rotate.ps1` depending on which version of powershell you're running.
+`Log-Rotate` can be used as a *module* or a *Task / Cron job* (as with *nix's logrotate).
 
 ### As a Module
 
