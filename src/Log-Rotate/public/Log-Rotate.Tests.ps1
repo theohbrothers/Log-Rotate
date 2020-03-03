@@ -572,57 +572,6 @@ Describe 'Log-Rotate' -Tag 'integration', 'integration tests' {
             Cleanup
         }
 
-        It "Option 'delaycompress': rotates a log file, but delays compressing the newest rotated file" {
-            $configFileContent = @"
-"$logFile" {
-    compress
-    compresscmd gzip
-    compressoptions
-    compressext .gz
-    delaycompress
-}
-"@
-            Init
-
-            # Rotate once
-            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference #-Verbose
-
-            # Assert that the log file should be gone
-            $logItem = Get-Item $logFile -ErrorAction SilentlyContinue
-            $logItem | Should -Be $null
-
-            # Assert that the rotated log file should be there
-            $rotatedLogItems = @( Get-Item $logDir/* )
-            $rotatedLogItems.Count | Should -Be 1
-            $rotatedLogItems[0] | Should -BeOfType [System.IO.FileSystemInfo]
-
-            # Assert that the rotated log file should be named
-            $rotatedLogItems[0].Name | Should -Be "$( Split-Path $logFile -Leaf ).1"
-
-            # Recreate the log file again
-            Init
-
-            # Rotate another time
-            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference #-Verbose
-
-            # Assert that the log file should be gone
-            $logItem = Get-Item $logFile -ErrorAction SilentlyContinue
-            $logItem | Should -Be $null
-
-            # Assert that the rotated log file(s) should be there
-            $rotatedLogItems = @( Get-Item $logDir/* )
-            $rotatedLogItems.Count | Should -Be 2
-            $rotatedLogItems[0] | Should -BeOfType [System.IO.FileSystemInfo]
-            $rotatedLogItems[1] | Should -BeOfType [System.IO.FileSystemInfo]
-
-            # Assert that the newest rotated log file should be named
-            $rotatedLogItems[0].Name | Should -Be "$( Split-Path $logFile -Leaf ).1"
-            # Assert that the oldest rotated log file should be named
-            $rotatedLogItems[1].Name | Should -Be "$( Split-Path $logFile -Leaf ).2.gz"
-
-            Cleanup
-        }
-
         It "Option 'copy': rotates a log file as a copy" {
             $configFileContent = @"
 "$logFile" {
@@ -796,6 +745,57 @@ Describe 'Log-Rotate' -Tag 'integration', 'integration tests' {
 
             # Assert that the rotated log file should be named
             $rotatedLogItems[0].Name | Should -Be "$( Split-Path $logFile -Leaf )$( Get-Date -UFormat '-%Y%m%d' )"
+
+            Cleanup
+        }
+
+        It "Option 'delaycompress': rotates a log file, but delays compressing the newest rotated file" {
+            $configFileContent = @"
+"$logFile" {
+    compress
+    compresscmd gzip
+    compressoptions
+    compressext .gz
+    delaycompress
+}
+"@
+            Init
+
+            # Rotate once
+            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference #-Verbose
+
+            # Assert that the log file should be gone
+            $logItem = Get-Item $logFile -ErrorAction SilentlyContinue
+            $logItem | Should -Be $null
+
+            # Assert that the rotated log file should be there
+            $rotatedLogItems = @( Get-Item $logDir/* )
+            $rotatedLogItems.Count | Should -Be 1
+            $rotatedLogItems[0] | Should -BeOfType [System.IO.FileSystemInfo]
+
+            # Assert that the rotated log file should be named
+            $rotatedLogItems[0].Name | Should -Be "$( Split-Path $logFile -Leaf ).1"
+
+            # Recreate the log file again
+            Init
+
+            # Rotate another time
+            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference #-Verbose
+
+            # Assert that the log file should be gone
+            $logItem = Get-Item $logFile -ErrorAction SilentlyContinue
+            $logItem | Should -Be $null
+
+            # Assert that the rotated log file(s) should be there
+            $rotatedLogItems = @( Get-Item $logDir/* )
+            $rotatedLogItems.Count | Should -Be 2
+            $rotatedLogItems[0] | Should -BeOfType [System.IO.FileSystemInfo]
+            $rotatedLogItems[1] | Should -BeOfType [System.IO.FileSystemInfo]
+
+            # Assert that the newest rotated log file should be named
+            $rotatedLogItems[0].Name | Should -Be "$( Split-Path $logFile -Leaf ).1"
+            # Assert that the oldest rotated log file should be named
+            $rotatedLogItems[1].Name | Should -Be "$( Split-Path $logFile -Leaf ).2.gz"
 
             Cleanup
         }
@@ -1077,6 +1077,32 @@ create
             Cleanup
         }
 
+        It "Option 'nodateext': rotates a log file without a date extension" {
+            $configFileContent = @"
+dateext
+"$logFile" {
+    nodateext
+}
+"@
+            Init
+
+            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference #-Verbose
+
+            # Assert that the log file should be gone
+            $logItem = Get-Item $logFile -ErrorAction SilentlyContinue
+            $logItem | Should -Be $null
+
+            # Assert that the rotated log file should be there
+            $rotatedLogItems = @( Get-Item $logDir/* )
+            $rotatedLogItems.Count | Should -Be 1
+            $rotatedLogItems[0] | Should -BeOfType [System.IO.FileSystemInfo]
+
+            # Assert that the rotated log file should be named
+            $rotatedLogItems[0].Name | Should -Be "$( Split-Path $logFile -Leaf ).1"
+
+            Cleanup
+        }
+
         It "Option 'nodelaycompress': rotates a log file, but does not delay compressing the newest rotated file" {
             $configFileContent = @"
 delaycompress
@@ -1125,32 +1151,6 @@ delaycompress
             $rotatedLogItems[0].Name | Should -Be "$( Split-Path $logFile -Leaf ).1.gz"
             # Assert that the oldest rotated log file should be named
             $rotatedLogItems[1].Name | Should -Be "$( Split-Path $logFile -Leaf ).2.gz"
-
-            Cleanup
-        }
-
-        It "Option 'nodateext': rotates a log file without a date extension" {
-            $configFileContent = @"
-dateext
-"$logFile" {
-    nodateext
-}
-"@
-            Init
-
-            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference #-Verbose
-
-            # Assert that the log file should be gone
-            $logItem = Get-Item $logFile -ErrorAction SilentlyContinue
-            $logItem | Should -Be $null
-
-            # Assert that the rotated log file should be there
-            $rotatedLogItems = @( Get-Item $logDir/* )
-            $rotatedLogItems.Count | Should -Be 1
-            $rotatedLogItems[0] | Should -BeOfType [System.IO.FileSystemInfo]
-
-            # Assert that the rotated log file should be named
-            $rotatedLogItems[0].Name | Should -Be "$( Split-Path $logFile -Leaf ).1"
 
             Cleanup
         }
@@ -1208,31 +1208,6 @@ olddir $logOldDir
             Cleanup
         }
 
-        It "Option 'notifempty': do not rotates a log file if it is empty" {
-            $logFileContent = '' # empty
-            $configFileContent = @"
-ifempty
-"$logFile" {
-    notifempty
-}
-"@
-            Init
-
-            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference #-Verbose
-
-            # Assert that the log file should be gone
-            $logItem = Get-Item $logFile -ErrorAction SilentlyContinue
-            $logItem | Should -BeOfType [System.IO.FileSystemInfo]
-
-            # Assert that there should be no rotated files
-            $rotatedLogItems = @( Get-Item $logDir/* )
-            $rotatedLogItems.Count | Should -Be 1
-            $rotatedLogItems[0] | Should -BeOfType [System.IO.FileSystemInfo]
-            $rotatedLogItems[0].Length | Should -Be 0
-
-            Cleanup
-        }
-
         It "Option 'nosharedscripts': rotates two log files, running a shared script only once" {
             $configFileContent = @"
 sharedscripts
@@ -1282,6 +1257,86 @@ sharedscripts
             Cleanup
         }
 
+        It "Option 'notifempty': do not rotates a log file if it is empty" {
+            $logFileContent = '' # empty
+            $configFileContent = @"
+ifempty
+"$logFile" {
+    notifempty
+}
+"@
+            Init
+
+            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference #-Verbose
+
+            # Assert that the log file should be gone
+            $logItem = Get-Item $logFile -ErrorAction SilentlyContinue
+            $logItem | Should -BeOfType [System.IO.FileSystemInfo]
+
+            # Assert that there should be no rotated files
+            $rotatedLogItems = @( Get-Item $logDir/* )
+            $rotatedLogItems.Count | Should -Be 1
+            $rotatedLogItems[0] | Should -BeOfType [System.IO.FileSystemInfo]
+            $rotatedLogItems[0].Length | Should -Be 0
+
+            Cleanup
+        }
+
+        It "Option 'olddir': rotates a log file into an olddir" {
+            $configFileContent = @"
+"$logFile" {
+    olddir $logOldDir
+}
+"@
+            Init
+
+            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference #-Verbose
+
+            # Assert that the log file should be gone
+            $logItem = Get-Item $logFile -ErrorAction SilentlyContinue
+            $logItem | Should -Be $null
+
+            # Assert that the rotated log file should be there
+            $rotatedLogItems = @( Get-Item $logOldDir/* )
+            $rotatedLogItems.Count | Should -Be 1
+            $rotatedLogItems[0] | Should -BeOfType [System.IO.FileSystemInfo]
+
+            # Assert that the rotated log file should be named
+            $rotatedLogItems[0].Name | Should -Be "$( Split-Path $logFile -Leaf ).1"
+
+            Cleanup
+        }
+
+        It "Option 'postrotate': rotates a log file with a postrotate script" {
+            $configFileContent = @"
+"$logFile" {
+    postrotate
+        echo 'foo'
+    endscript
+}
+"@
+            Init
+
+            $result = Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference #-Verbose
+
+            # Assert that the log file should be gone
+            $logItem = Get-Item $logFile -ErrorAction SilentlyContinue
+            $logItem | Should -Be $null
+
+            # Assert that the rotated log file should be there
+            $rotatedLogItems = @( Get-Item $logDir/* )
+            $rotatedLogItems.Count | Should -Be 1
+            $rotatedLogItems[0] | Should -BeOfType [System.IO.FileSystemInfo]
+
+            # Assert that the rotated log file should be named
+            $rotatedLogItems[0].Name | Should -Be "$( Split-Path $logFile -Leaf ).1"
+
+            # Expect that the script was run
+            $result | Should -Be 'foo'
+
+            Cleanup
+        }
+
         It "Option 'preremove': rotates a log file with a preremove script" {
             $configFileContent = @"
 "$logFile" {
@@ -1320,31 +1375,6 @@ sharedscripts
             Cleanup
         }
 
-        It "Option 'olddir': rotates a log file into an olddir" {
-            $configFileContent = @"
-"$logFile" {
-    olddir $logOldDir
-}
-"@
-            Init
-
-            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference #-Verbose
-
-            # Assert that the log file should be gone
-            $logItem = Get-Item $logFile -ErrorAction SilentlyContinue
-            $logItem | Should -Be $null
-
-            # Assert that the rotated log file should be there
-            $rotatedLogItems = @( Get-Item $logOldDir/* )
-            $rotatedLogItems.Count | Should -Be 1
-            $rotatedLogItems[0] | Should -BeOfType [System.IO.FileSystemInfo]
-
-            # Assert that the rotated log file should be named
-            $rotatedLogItems[0].Name | Should -Be "$( Split-Path $logFile -Leaf ).1"
-
-            Cleanup
-        }
-
         It "Option 'prerotate': rotates a log file with a prerotate script" {
             $configFileContent = @"
 "$logFile" {
@@ -1374,37 +1404,6 @@ sharedscripts
 
             Cleanup
         }
-
-        It "Option 'postrotate': rotates a log file with a postrotate script" {
-            $configFileContent = @"
-"$logFile" {
-    postrotate
-        echo 'foo'
-    endscript
-}
-"@
-            Init
-
-            $result = Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference #-Verbose
-
-            # Assert that the log file should be gone
-            $logItem = Get-Item $logFile -ErrorAction SilentlyContinue
-            $logItem | Should -Be $null
-
-            # Assert that the rotated log file should be there
-            $rotatedLogItems = @( Get-Item $logDir/* )
-            $rotatedLogItems.Count | Should -Be 1
-            $rotatedLogItems[0] | Should -BeOfType [System.IO.FileSystemInfo]
-
-            # Assert that the rotated log file should be named
-            $rotatedLogItems[0].Name | Should -Be "$( Split-Path $logFile -Leaf ).1"
-
-            # Expect that the script was run
-            $result | Should -Be 'foo'
-
-            Cleanup
-        }
-
 
         It "Option 'rotate': rotates a log file, keeping only a certain number of old files" {
             $configFileContent = @"
@@ -1455,31 +1454,6 @@ sharedscripts
             Cleanup
         }
 
-        It "Option 'size': rotates a log file larger than specified by 'size'" {
-            $configFileContent = @"
-"$logFile" {
-    size 1
-}
-"@
-            Init
-
-            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference #-Verbose
-
-            # Assert that the log file should be gone
-            $logItem = Get-Item $logFile -ErrorAction SilentlyContinue
-            $logItem | Should -Be $null
-
-            # Assert that the rotated log file should be there
-            $rotatedLogItems = @( Get-Item $logDir/* )
-            $rotatedLogItems.Count | Should -Be 1
-            $rotatedLogItems[0] | Should -BeOfType [System.IO.FileSystemInfo]
-
-            # Assert that the rotated log file should be named
-            $rotatedLogItems[0].Name | Should -Be "$( Split-Path $logFile -Leaf ).1"
-
-            Cleanup
-        }
-
         It "Option 'sharedscripts': rotates two log files, running a shared script only once" {
             $configFileContent = @"
 "$logFile" "$logFile2" {
@@ -1522,6 +1496,31 @@ sharedscripts
 
             # Assert that the rotated log file should be named
             $rotatedLogItems2[0].Name | Should -Be "$( Split-Path $logFile2 -Leaf ).1"
+
+            Cleanup
+        }
+
+        It "Option 'size': rotates a log file larger than specified by 'size'" {
+            $configFileContent = @"
+"$logFile" {
+    size 1
+}
+"@
+            Init
+
+            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference #-Verbose
+
+            # Assert that the log file should be gone
+            $logItem = Get-Item $logFile -ErrorAction SilentlyContinue
+            $logItem | Should -Be $null
+
+            # Assert that the rotated log file should be there
+            $rotatedLogItems = @( Get-Item $logDir/* )
+            $rotatedLogItems.Count | Should -Be 1
+            $rotatedLogItems[0] | Should -BeOfType [System.IO.FileSystemInfo]
+
+            # Assert that the rotated log file should be named
+            $rotatedLogItems[0].Name | Should -Be "$( Split-Path $logFile -Leaf ).1"
 
             Cleanup
         }
