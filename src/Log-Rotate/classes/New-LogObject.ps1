@@ -488,15 +488,16 @@ function New-LogObject {
 
             # Validate our olddir is a directory, and resolve it to an absolute path
             if ($olddir) {
-                Set-Location $my_directory
                 # Try relative location, then try absolute
-                if (Test-Path $olddir -PathType Container) {
-                    $olddir = (Get-Item $olddir).FullName
+
+                if ([System.IO.Path]::IsPathRooted($olddir)) {
+                    # Absolute path
                 }else {
-                    $olddir = Join-Path $($logfile.Directory.FullName) $olddir
-                    if ( !(Test-Path $olddir -PathType Container) ) {
-                        throw "Invalid olddir: $olddir. Not using olddir. Skipping log $($logfile.FullName)!"
-                    }
+                    # Relative path. Check for existance of an olddir in the same directory as the log file
+                    $olddir = Join-Path $my_directory $olddir
+                }
+                if ( !(Test-Path $olddir -PathType Container) ) {
+                    throw "Invalid olddir: $olddir. Not using olddir. Skipping log $($logfile.FullName)!"
                 }
             }
 
