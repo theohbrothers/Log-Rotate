@@ -337,7 +337,7 @@ Describe "Log-Rotate" {
 # Integration Tests #
 #####################
 Get-Module $PSScriptRoot/../* -ListAvailable | Import-Module  -Force 3>$null
-Describe 'Log-Rotate' {
+Describe 'Log-Rotate' -Tag 'integration', 'integration tests' {
 
     $drive = Convert-Path 'TestDrive:\'
 
@@ -400,10 +400,6 @@ Describe 'Log-Rotate' {
         Get-Item $configDir -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
         Get-Item $configDir2 -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
         Get-Item $stateDir -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
-    }
-
-    AfterEach {
-        Cleanup
     }
 
     Context 'Behavior from flags' {
@@ -1286,16 +1282,24 @@ sharedscripts
             Cleanup
         }
 
-        It "Option 'prerotate': rotates a log file with a prerotate script" {
+        It "Option 'preremove': rotates a log file with a preremove script" {
             $configFileContent = @"
 "$logFile" {
-    prerotate
+    rotate 1
+    preremove
         echo 'foo'
     endscript
 }
 "@
             Init
 
+            # Rotate once
+            $result = Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference #-Verbose
+
+            # Recreate the log file again
+            Init
+
+            # Rotate again
             $result = Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference #-Verbose
 
             # Assert that the log file should be gone
@@ -1337,6 +1341,36 @@ sharedscripts
 
             # Assert that the rotated log file should be named
             $rotatedLogItems[0].Name | Should -Be "$( Split-Path $logFile -Leaf ).1"
+
+            Cleanup
+        }
+
+        It "Option 'prerotate': rotates a log file with a prerotate script" {
+            $configFileContent = @"
+"$logFile" {
+    prerotate
+        echo 'foo'
+    endscript
+}
+"@
+            Init
+
+            $result = Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference #-Verbose
+
+            # Assert that the log file should be gone
+            $logItem = Get-Item $logFile -ErrorAction SilentlyContinue
+            $logItem | Should -Be $null
+
+            # Assert that the rotated log file should be there
+            $rotatedLogItems = @( Get-Item $logDir/* )
+            $rotatedLogItems.Count | Should -Be 1
+            $rotatedLogItems[0] | Should -BeOfType [System.IO.FileSystemInfo]
+
+            # Assert that the rotated log file should be named
+            $rotatedLogItems[0].Name | Should -Be "$( Split-Path $logFile -Leaf ).1"
+
+            # Expect that the script was run
+            $result | Should -Be 'foo'
 
             Cleanup
         }
@@ -1589,5 +1623,4 @@ sharedscripts
             Cleanup
         }
     }
-
-} -Tag 'integration', 'integration tests'
+}
