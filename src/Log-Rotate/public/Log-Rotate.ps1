@@ -214,6 +214,7 @@ function Log-Rotate {
         # Instantiate Singletons
         $BlockFactory = New-BlockFactory
         $LogFactory = New-LogFactory
+        $LogObject = New-LogObject
 
         # Create Blocks from our Full Config
         $BlockFactory.Create($FullConfig)
