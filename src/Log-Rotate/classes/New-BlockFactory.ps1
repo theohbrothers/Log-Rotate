@@ -241,7 +241,7 @@ function New-BlockFactory {
                     $this.Blocks[$my_path_pattern]['Options'] = Override-Options $this.Blocks[$my_path_pattern]['LocalOptions'] $this.GlobalOptions
                     $this.Blocks[$my_path_pattern]['LogFiles'] = Get-Block-Logs $this.Blocks[$my_path_pattern] $this.UniqueLogFileNames
                 } catch {
-                    Write-Error "$(Get-Exception-Message($_))" -ErrorAction Continue
+                    throw
                 }
             }
         }else {
