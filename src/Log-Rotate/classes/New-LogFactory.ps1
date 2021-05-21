@@ -35,7 +35,7 @@ function New-LogFactory {
             if ($exists) {
                 # Ensure it's not an existing diretory
                 $item = Get-Item $statusfile_path -ErrorAction Stop
-                if ($item.PSIsContainer) {
+                if (Test-Path $item.FullName -PathType Container) {
                     throw "STATUSFILE: WARNING: Invalid status file $statusfile_path . It points to an existing directory $($item.FullName)."
                 }
 
