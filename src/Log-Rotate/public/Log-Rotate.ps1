@@ -71,6 +71,9 @@ function Log-Rotate {
         [alias("c")]
         [string[]]$Config
     ,
+        [alias("d")]
+        [switch]$WhatIf
+    ,
         [alias("f")]
         [switch]$Force
     ,
@@ -90,8 +93,9 @@ function Log-Rotate {
         [switch]$Version
     )
 
-    if ($debug) {
+    if ($WhatIf) {
         Write-Warning "We are in Debug mode. No logs will be rotated."
+        $VerbosePreference = 'Continue'
     }
     if ($Force) {
         Write-Warning "We are in Forced-Rotation mode."
@@ -104,8 +108,8 @@ function Log-Rotate {
     # 1 - On, script does not change files. Calling Log-Rotate with -Debug will switch this to 1.
     # 2 - Output Stacktrace in error messages
     # 4 - On, verbose mode. Implies (1). This is NOT related to calling Log-Rotate with -Verbose, but strictly for debugging messages.
-    $g_debugFlag = 0
-    if ($g_debugFlag) {
+    $WhatIf = 0
+    if ($WhatIf) {
         Write-Warning "Developer's debug flag is on."
     }
 
@@ -122,7 +126,7 @@ function Log-Rotate {
         # If we're using the -debug flag, always use -verbose mode.
         $DebugPreference = 'Continue'
         # Preserve our set debug flag for testing
-        $g_debugFlag = if ($g_debugFlag) { $g_debugFlag } else { 1 }
+        $WhatIf = if ($WhatIf) { $WhatIf } else { 1 }
     }else {
          # If we're not using the -debug flag, debug should stay silent instead of prompting.
         $DebugPreference = 'SilentlyContinue'
@@ -159,9 +163,6 @@ function Log-Rotate {
         #Write-Verbose "Current working directory: $( Convert-Path . )"
         Write-Verbose "Current working directory: $( $(Get-Location).Path )"
 
-        # Debug
-        if ($g_debugFlag -band 4) { Write-Verbose "Verbose stream: $VerbosePreference" }
-        if ($g_debugFlag -band 4) { Write-Verbose "Debug stream: $DebugPreference" }
 
         # Get the configuration as a string
         if ($ConfigAsString) {

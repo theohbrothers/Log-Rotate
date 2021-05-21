@@ -23,12 +23,12 @@ function New-LogObject {
                             # File exists.
                             Write-Verbose "Error creating output file $my_previous_fullname`: File exists"
                         }else {
-                            if (!$g_debugFlag) {
+                            if (!$WhatIf) {
                                 Copy-Item $my_fullname $my_previous_fullname -ErrorAction Stop
                             }
                             if ($copytruncate) {
                                 Write-Verbose "Truncating $my_fullname"
-                                if (!$g_debugFlag) {
+                                if (!$WhatIf) {
                                     Clear-Content $my_fullname
                                 }
                             }else {
@@ -42,12 +42,12 @@ function New-LogObject {
                             # File exists.
                             Write-Verbose "Error creating output file $my_previous_fullname`: File exists"
                         }else {
-                            if (!$g_debugFlag) {
+                            if (!$WhatIf) {
                                 Move-Item $my_fullname $my_previous_fullname -Force
                             }
                             if ($create) {
                                 Write-Verbose "Creating new log file $my_fullname"
-                                if (!$g_debugFlag) {
+                                if (!$WhatIf) {
                                     $newitem = New-Item $my_fullname -ItemType File | Out-Null
                                     if ($newitem) {
 
@@ -103,7 +103,7 @@ function New-LogObject {
 
                             # Rename old logs
                             Write-Verbose "Renaming $source_fullName to $destination_fullName (rotatecount $rotate, logstart $start, i $i)"
-                            if ($g_debugFlag) { continue }
+                            if ($WhatIf) { continue }
                             if (Test-Path $source_fullName) {
                                 Try {
                                     Move-Item -Path $source_fullName -Destination $destination_fullName -Force
@@ -136,7 +136,7 @@ function New-LogObject {
                         $params = @( 'rn', $fullName, '*', $baseName )
                         try {
                             Write-Verbose "Rename log inside compressed archive $fullName to $baseName"
-                            if ($g_debugFlag) {
+                            if ($WhatIf) {
                                 continue
                             }
 
@@ -190,7 +190,7 @@ function New-LogObject {
                 try {
                     Write-Verbose "Compressing log with: $compresscmd"
                     Write-Verbose "Compress command line: $compresscmd $( $params -join ' ' )"
-                    if ($g_debugFlag) {
+                    if ($WhatIf) {
                         return
                     }
 
@@ -343,7 +343,7 @@ function New-LogObject {
                     }
 
                     # Delete file
-                    if (!$g_debugFlag) {
+                    if (!$WhatIf) {
                         Remove-Item $file_fullname
                     }else {
                         # For debugging to simulate deleted file
@@ -1047,8 +1047,8 @@ function New-LogObject {
                 if ($rotate -gt 0) {
                     $keep_prev_count = $rotate
                     $prev_files = Get-Files $my_previous_noncompressed_regex $my_previous_directory | Where-Object {
-                                                                                                            !$g_debugFlag -or
-                                                                                                            ($g_debugFlag -and $_.FullName -notin $debug_my_prevfilespurged_fullnames )
+                                                                                                            !$WhatIf -or
+                                                                                                            ($WhatIf -and $_.FullName -notin $debug_my_prevfilespurged_fullnames )
                                                                                                         }
 
                     Remove-Old-Files $prev_files $keep_prev_count 1
@@ -1091,8 +1091,8 @@ function New-LogObject {
                 # Delete old compressed logs
                 if ($rotate -gt 0) {
                     $prev_files = Get-Files $my_previous_compressed_regex $my_previous_directory | Where-Object {
-                        !$g_debugFlag -or
-                        ($g_debugFlag -and $_.FullName -notin $debug_my_prevfilespurged_fullnames )
+                        !$WhatIf -or
+                        ($WhatIf -and $_.FullName -notin $debug_my_prevfilespurged_fullnames )
                     }
                     Remove-Old-Files $prev_files $keep_prev_compressed_count 1
                 }

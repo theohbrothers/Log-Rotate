@@ -304,7 +304,7 @@ function Process-Local-Block  {
                         }
                     }
                 }else {
-                    if ($g_debugFlag) {
+                    if ($WhatIf) {
                         Write-Verbose "Not running first action script, since no logs will be rotated"
                         Write-Verbose "Not running prerotate script, since no logs will be rotated"
                         Write-Verbose "Not running postrotate script, since no logs will be rotated"
