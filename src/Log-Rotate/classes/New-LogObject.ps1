@@ -105,10 +105,10 @@ function New-LogObject {
                             Write-Verbose "Renaming $source_fullName to $destination_fullName (rotatecount $rotate, logstart $start, i $i)"
                             if ($WhatIf) { continue }
                             if (Test-Path $source_fullName) {
-                                Try {
+                                try {
                                     Move-Item -Path $source_fullName -Destination $destination_fullName -Force
-                                }Catch {
-                                    Write-Error "$(Get-Exception-Message $_)"
+                                }catch {
+                                    throw
                                 }
                             }else {
                                 Write-Verbose "Old log $source_fullName does not exist."
@@ -158,7 +158,8 @@ function New-LogObject {
                             }
                         }catch {
                             #Write-Verbose "Renaming failed for log within compressed archive $fullName ."
-                            Write-Verbose "Renaming log within compressed archive $fullName failed because $(Get-Exception-Message $_)."
+                            Write-Verbose "Renaming log within compressed archive $fullName failed."
+                            Write-Error -ErrorRecord $_ -ErrorAction Continue
                         }
                     }
                 }
@@ -233,7 +234,7 @@ function New-LogObject {
                     #>
                 }catch {
                     Write-Verbose "Compression failed."
-                    throw "Compression failed because $(Get-Exception-Message $_)"
+                    throw
                 }
 
                 # Remove the previous file
@@ -338,7 +339,8 @@ function New-LogObject {
                         try {
                             Start-Script $preremove $file_fullname -ErrorAction $CallerEA
                         }catch {
-                            throw "Failed to run preremove script. $(Get-Exception-Message $_)"
+                            Write-Error "Failed to run preremove script." -ErrorAction Continue
+                            throw
                         }
                     }
 
@@ -975,7 +977,8 @@ function New-LogObject {
             try {
                 Start-Script $prerotate $my_fullname -ErrorAction Stop
             }catch {
-                throw "Failed to run prerotate script. $(Get-Exception-Message $_)"
+                Write-Error  "Failed to run prerotate script." -ErrorAction Continue
+                throw
             }
 
             $this.Status.prerotate = $true
@@ -1011,7 +1014,8 @@ function New-LogObject {
             try {
                 Start-Script $postrotate $my_fullname -ErrorAction $CallerEA
             }catch {
-                throw "Failed to run postrotate script. $(Get-Exception-Message $_)"
+                Write-Error "Failed to run postrotate script." -ErrorAction Continue
+                throw
             }
             $this.Status.postrotate = $true
         }
