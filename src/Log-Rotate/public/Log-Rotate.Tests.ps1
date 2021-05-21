@@ -117,7 +117,7 @@ Describe "Log-Rotate" -Tag 'Unit' {
             . $initScriptBlock
             Mock Compile-Full-Config {}
 
-            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference
+            Log-Rotate -config $configFile -ErrorAction $eaPreference
 
             Assert-MockCalled Compile-Full-Config -Times 1
         }
@@ -127,7 +127,7 @@ Describe "Log-Rotate" -Tag 'Unit' {
             Mock Test-Path -ParameterFilter { $Path -eq 'foo' -and $PathType } { $false }
             Mock Compile-Full-Config {}
 
-            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference
+            Log-Rotate -config $configFile -ErrorAction $eaPreference
 
             Assert-MockCalled Compile-Full-Config -Times 1
         }
@@ -136,7 +136,7 @@ Describe "Log-Rotate" -Tag 'Unit' {
             . $initScriptBlock
             Mock Validate-Full-Config {}
 
-            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference
+            Log-Rotate -config $configFile -ErrorAction $eaPreference
 
             Assert-MockCalled Validate-Full-Config -Times 1
         }
@@ -157,7 +157,7 @@ Describe "Log-Rotate" -Tag 'Unit' {
                 $BlockFactory
             }
 
-            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference
+            Log-Rotate -config $configFile -ErrorAction $eaPreference
 
             Assert-MockCalled New-BlockFactory -Times 1
         }
@@ -165,7 +165,7 @@ Describe "Log-Rotate" -Tag 'Unit' {
         It 'instantiates singleton LogFactory' {
             . $initScriptBlock
 
-            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference
+            Log-Rotate -config $configFile -ErrorAction $eaPreference
 
             Assert-MockCalled New-LogFactory -Times 1
         }
@@ -173,7 +173,7 @@ Describe "Log-Rotate" -Tag 'Unit' {
         It 'instantiates singleton LogObject' {
             . $initScriptBlock
 
-            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference
+            Log-Rotate -config $configFile -ErrorAction $eaPreference
 
             Assert-MockCalled New-LogObject -Times 1
         }
@@ -196,7 +196,7 @@ Describe "Log-Rotate" -Tag 'Unit' {
                 $BlockFactory
             }
 
-            $result = Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference
+            $result = Log-Rotate -config $configFile -ErrorAction $eaPreference
 
             $result | Should -Be 'create'
         }
@@ -212,7 +212,7 @@ Describe "Log-Rotate" -Tag 'Unit' {
                 $LogFactory
             }
 
-            $result = Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference
+            $result = Log-Rotate -config $configFile -ErrorAction $eaPreference
 
             $result | Should -Be 'initstatus'
         }
@@ -220,7 +220,7 @@ Describe "Log-Rotate" -Tag 'Unit' {
         It 'processes a block configuration' {
             . $initScriptBlock
 
-            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference
+            Log-Rotate -config $configFile -ErrorAction $eaPreference
 
             Assert-MockCalled Process-Local-Block -Times 1
         }
@@ -237,7 +237,7 @@ Describe "Log-Rotate" -Tag 'Unit' {
                 $LogFactory
             }
 
-            $result = Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference
+            $result = Log-Rotate -config $configFile -ErrorAction $eaPreference
 
             $result | Should -Be 'dumpstatus'
         }
