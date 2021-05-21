@@ -30,7 +30,7 @@ CompanyName = 'The Oh Brothers'
 Copyright = '(c) 2017 The Oh Brothers'
 
 # Description of the functionality provided by this module
-Description = 'A replica of the [logrotate utility](https://github.com/logrotate/logrotate  "logrotate utility"), except this also runs on Windows systems.'
+Description = 'A replica of the logrotate utility, except this also runs on Windows systems.'
 
 # Minimum version of the PowerShell engine required by this module
 PowerShellVersion = '3.0'
