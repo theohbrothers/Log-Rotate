@@ -143,10 +143,10 @@ We'll decide to use a `Log-Rotate` *state* file in *C:\var\Log-Rotate\Log-Rotate
 
 We'll decide to log the *Task* to *C:\logs\Log-Rotate.log*. This file will capture all the Powershell output streams.
 
-Run the Command line with the `-Debug` parameter to make sure everything is working.
+Run the Command line with the `-WhatIf` parameter to make sure everything is working.
 
 ```powershell
-Powershell 'Import-Module Log-Rotate; Log-Rotate -Config "C:\configs\Log-Rotate\Log-Rotate.conf" -State "C:\var\Log-Rotate\Log-Rotate.status" -Verbose -Debug'
+Powershell 'Import-Module Log-Rotate; Log-Rotate -Config "C:\configs\Log-Rotate\Log-Rotate.conf" -State "C:\var\Log-Rotate\Log-Rotate.status" -Verbose -WhatIf'
 ```
 
 Task Command line:
@@ -176,10 +176,10 @@ We'll decide to use a `Log-Rotate` *state* file in */var/lib/Log-Rotate/Log-Rota
 
 We'll decide to log the *cron* to */var/log/Log-Rotate.log*. This file will capture all the Powershell output streams.
 
-Run the Command line with the `-Debug` parameter to make sure everything is working.
+Run the Command line with the `-WhatIf` parameter to make sure everything is working.
 
 ```powershell
-Powershell 'Import-Module Log-Rotate; Log-Rotate -Config "/etc/Log-Rotate.conf" -State "/var/lib/Log-Rotate/Log-Rotate.status" -Verbose -Debug'
+Powershell 'Import-Module Log-Rotate; Log-Rotate -Config "/etc/Log-Rotate.conf" -State "/var/lib/Log-Rotate/Log-Rotate.status" -Verbose -WhatIf'
 ```
 
 Cron command line:
@@ -208,7 +208,7 @@ PARAMETERS
         Later config files will override earlier ones.
         The best method is to use a single config file that includes other config files by using the 'include' directive.
 
-    -Debug [<SwitchParameter>]
+    -WhatIf [<SwitchParameter>]
         In debug mode, no logs are rotated. Use this to validate your configs or observe rotation logic.
 
     -Force [<SwitchParameter>]
