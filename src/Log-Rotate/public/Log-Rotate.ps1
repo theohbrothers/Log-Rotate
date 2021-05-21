@@ -49,7 +49,7 @@ function Log-Rotate {
     Log-Rotate -Config "/etc/configs/" -Verbose
 
     .LINK
-    https://github.com/leojonathanoh/Log-Rotate
+    https://github.com/theohbrothers/Log-Rotate
 
     .NOTES
     *logrotate manual: https://linux.die.net/man/8/logrotate
