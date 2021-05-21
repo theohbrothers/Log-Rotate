@@ -1,7 +1,7 @@
 param (
     [string]$Tag = ''
 )
-$MODULE_NAME = 'Log-Rotate'
+$MODULE_NAME = (Get-Item $PSScriptRoot/../).Name
 $MODULE_DIR = "$PSScriptRoot/../src/$MODULE_NAME"
 $MODULE_PATH = "$MODULE_DIR/$MODULE_NAME.psm1"
 
