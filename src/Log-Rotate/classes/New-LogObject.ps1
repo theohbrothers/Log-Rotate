@@ -1107,4 +1107,6 @@ function New-LogObject {
         # Removed this - Script will spit stdout on the Pipeline
         #$this.Status.postpostrotate
     }
+
+    $LogObject
 }

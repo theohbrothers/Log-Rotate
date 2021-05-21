@@ -110,6 +110,8 @@ Describe "Log-Rotate" {
         $LogFactory
     }
 
+    function New-LogObject {}
+
     function Process-Local-Block {}
 
     Context 'Invalid parameters (Non-Terminating)' {
