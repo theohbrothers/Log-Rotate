@@ -168,7 +168,7 @@ function New-BlockFactory {
 
                         if (Test-Path -LiteralPath $logpath) {
                             $item = Get-Item -Path $logpath
-                            if ($item.PSIsContainer) {
+                            if (Test-Path $item.FullName -PathType Container) {
                                 # It's a directory. Ignore it.
                                 if (!$opt_missingok) {
                                     Write-Verbose "Excluding path $logpath for rotation, because it is a directory. Directories cannot be rotated. If rotating all the files in the directory, append a wildcard to the end of the path."

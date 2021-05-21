@@ -9,7 +9,7 @@ function Compile-Full-Config {
         if ($include_path -and (Test-Path $include_path))  {
             $item = Get-Item $include_path
 
-            if ($item.PSIsContainer) {
+            if (Test-Path $item.FullName -PathType Container) {
                 # It's a directory. Include content of all files inside it
                 $content = ""
                 Get-ChildItem $item | ForEach-Object {

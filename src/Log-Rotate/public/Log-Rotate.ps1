@@ -180,7 +180,7 @@ function Log-Rotate {
                     if (Test-Path $_) {
 
                         $item = Get-Item $_
-                        if ($item.PSIsContainer) {
+                        if (Test-Path $item.FullName -PathType Container) {
                             # It's a directory. Consider all child files as config files.
                             Get-ChildItem $item.FullName -File | ForEach-Object {
                                 Write-Verbose "Config file found: $($_.FullName)"
