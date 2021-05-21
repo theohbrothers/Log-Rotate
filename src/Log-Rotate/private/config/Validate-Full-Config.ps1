@@ -1,10 +1,6 @@
 function Validate-Full-Config {
     param ([string]$FullConfig)
 
-    if ($g_debugFlag -band 4) { Write-Debug "[Validate-Full-Config] Verbose stream: $VerbosePreference" }
-    if ($g_debugFlag -band 4) { Write-Debug "[Validate-Full-Config] Debug stream: $DebugPreference" }
-    if ($g_debugFlag -band 4) { Write-Debug "[Validate-Full-Config] Erroraction: $ErrorActionPreference" }
-
     function Get-LinesAround([string[]]$lines, [int]$line_number) {
         $start = 0
         $around = 10

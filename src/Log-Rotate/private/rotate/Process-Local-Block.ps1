@@ -68,10 +68,6 @@ function Process-Local-Block  {
         $blockpath = $block.Path
         $logfiles = $block.Logfiles
 
-        if ($g_debugFlag -band 4) { Write-Debug "[Process-Local-Block] Verbose stream: $VerbosePreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[Process-Local-Block] Debug stream: $DebugPreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[Process-Local-Block] Erroraction: $ErrorActionPreference" }
-
         # $PSBoundParameters automatic variable is a hashtable containing all bound parameters (keys) and their arguments(values). These are our options.
         $options = $PSBoundParameters
 

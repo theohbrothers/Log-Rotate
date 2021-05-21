@@ -440,10 +440,6 @@ function New-LogObject {
         #>
         param ([System.IO.FileInfo]$logfile, [hashtable]$options, [string]$lastRotationDate)
 
-        if ($g_debugFlag -band 4) { Write-Debug "[LogObject][New] Verbose stream: $VerbosePreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[LogObject][New] Debug stream: $DebugPreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[LogObject][New] Erroraction: $ErrorActionPreference" }
-
         # Unpack the block's options into variables
         $options.Keys | ForEach-Object {
             Set-Variable -Name $_ -Value $options[$_]
@@ -819,10 +815,6 @@ function New-LogObject {
         $null
     }
     $LogObject | Add-Member -Name 'PrePrerotate' -MemberType ScriptMethod -Value {
-        if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PrePrerotate] Verbose stream: $VerbosePreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PrePrerotate] Debug stream: $DebugPreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PrePrerotate] Erroraction: $ErrorActionPreference" }
-
         # Unpack Object properties
         Set-Variable -Name 'logfile' -Value $this.Logfile
         $this.Options.Keys | ForEach-Object {
@@ -973,10 +965,6 @@ function New-LogObject {
         #$this.Status.preprerotate
     }
     $LogObject | Add-Member -Name 'Prerotate' -MemberType ScriptMethod -Value {
-        if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Prerotate] Verbose stream: $VerbosePreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Prerotate] Debug stream: $DebugPreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Prerotate] Erroraction: $ErrorActionPreference" }
-
         # Unpack Object properties
         $prerotate = $this.Options['prerotate']
         $my_fullname = $this.Metadata['my_fullname']
@@ -996,10 +984,6 @@ function New-LogObject {
         #$this.Status.prerotate
     }
     $LogObject | Add-Member -Name 'RotateMainOnly' -MemberType ScriptMethod -Value {
-        if ($g_debugFlag -band 4) { Write-Debug "[LogObject][RotateMainOnly] Verbose stream: $VerbosePreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[LogObject][RotateMainOnly] Debug stream: $DebugPreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[LogObject][RotateMainOnly] Erroraction: $ErrorActionPreference" }
-
         # Unpack Object properties
         Set-Variable -Name 'logfile' -Value $this.Logfile
         $this.Options.Keys | ForEach-Object {
@@ -1017,10 +1001,6 @@ function New-LogObject {
         #$this.Status.rotate
     }
     $LogObject | Add-Member -Name 'Postrotate' -MemberType ScriptMethod -Value {
-        if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Postrotate] Verbose stream: $VerbosePreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Postrotate] Debug stream: $DebugPreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[LogObject][Postrotate] Erroraction: $ErrorActionPreference" }
-
         # Unpack Object properties
         $postrotate = $this.Options['postrotate']
         $my_fullname = $this.Metadata['my_fullname']
@@ -1039,10 +1019,6 @@ function New-LogObject {
         #$this.Status.postrotate
     }
     $LogObject | Add-Member -Name 'PostPostRotate' -MemberType ScriptMethod -Value {
-        if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PostPostRotate] Verbose stream: $VerbosePreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PostPostRotate] Debug stream: $DebugPreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[LogObject][PostPostRotate] Erroraction: $ErrorActionPreference" }
-
         # Unpack Object properties
         Set-Variable -Name 'logfile' -Value $this.Logfile
         $this.Options.Keys | ForEach-Object {
