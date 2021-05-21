@@ -123,7 +123,7 @@ function New-BlockFactory {
             function Get-Block-Logs {
                 param ([object]$blockObject)
 
-3                $blockpath = $blockObject['Path']
+                $blockpath = $blockObject['Path']
                 $opt_tabooext = $blockObject['Options']['tabooext']
                 $opt_missingok = if ($blockObject['Options']['notmissingok']) { $false } else { $blockObject['Options']['missingok'] }
 
