@@ -9,7 +9,7 @@
     Author = 'Log-Rotate'
     CompanyName = 'The Oh Brothers'
     Copyright = '(c) 2017 The Oh Brothers'
-    Description = 'A replica of the [logrotate utility](https://github.com/logrotate/logrotate  "logrotate utility"), except this also runs on Windows systems.'
+    Description = 'A replica of the logrotate utility, except this also runs on Windows systems.'
     PowerShellVersion = '3.0'
     # PowerShellHostName = ''
     # PowerShellHostVersion = ''
