@@ -101,18 +101,6 @@ function Log-Rotate {
         Write-Warning "We are in Forced-Rotation mode."
     }
 
-    # Debug bitwise flag (for developers)
-    # Enter the sum of all the options you want.
-    # All values above 1 implies 1.
-    # 0 - Off
-    # 1 - On, script does not change files. Calling Log-Rotate with -Debug will switch this to 1.
-    # 2 - Output Stacktrace in error messages
-    # 4 - On, verbose mode. Implies (1). This is NOT related to calling Log-Rotate with -Verbose, but strictly for debugging messages.
-    $WhatIf = 0
-    if ($WhatIf) {
-        Write-Warning "Developer's debug flag is on."
-    }
-
     # Use Caller Error action if specified
     $CallerEA = $ErrorActionPreference
     $ErrorActionPreference = 'Stop'
