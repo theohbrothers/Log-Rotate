@@ -10,15 +10,13 @@ function Start-Script {
         # Save the caller's ErrorAction
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
-        if ($g_debugFlag -band 4) { Write-Verbose "[Start-Script] callerEA: $callerEA" }
-        if ($g_debugFlag -band 4) { Write-Verbose "[Start-Script] ErrorActionPreference: $ErrorActionPreference" }
     }
 
     process {
         try {
             Write-Verbose "Running script with arg $file_FullName : `n$script"
             $OS = $ENV:OS
-            if (!$g_debugFlag) {
+            if (!$DebugFlag) {
                 if ($OS -eq "Windows_NT") {
                     # E.g. & Powershell -Command { echo $Args[0] } -Args @('D:/console.log')
 

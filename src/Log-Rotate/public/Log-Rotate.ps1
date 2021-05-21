@@ -71,6 +71,9 @@ function Log-Rotate {
         [alias("c")]
         [string[]]$Config
     ,
+        [alias("d")]
+        [string[]]$DebugFlag
+    ,
         [alias("f")]
         [switch]$Force
     ,
@@ -90,7 +93,7 @@ function Log-Rotate {
         [switch]$Version
     )
 
-    if ($debug) {
+    if ($DebugFlag) {
         Write-Warning "We are in Debug mode. No logs will be rotated."
     }
     if ($Force) {
@@ -104,8 +107,8 @@ function Log-Rotate {
     # 1 - On, script does not change files. Calling Log-Rotate with -Debug will switch this to 1.
     # 2 - Output Stacktrace in error messages
     # 4 - On, verbose mode. Implies (1). This is NOT related to calling Log-Rotate with -Verbose, but strictly for debugging messages.
-    $g_debugFlag = 0
-    if ($g_debugFlag) {
+    $DebugFlag = 0
+    if ($DebugFlag) {
         Write-Warning "Developer's debug flag is on."
     }
 
@@ -122,7 +125,7 @@ function Log-Rotate {
         # If we're using the -debug flag, always use -verbose mode.
         $DebugPreference = 'Continue'
         # Preserve our set debug flag for testing
-        $g_debugFlag = if ($g_debugFlag) { $g_debugFlag } else { 1 }
+        $DebugFlag = if ($DebugFlag) { $DebugFlag } else { 1 }
     }else {
          # If we're not using the -debug flag, debug should stay silent instead of prompting.
         $DebugPreference = 'SilentlyContinue'
@@ -159,9 +162,6 @@ function Log-Rotate {
         #Write-Verbose "Current working directory: $( Convert-Path . )"
         Write-Verbose "Current working directory: $( $(Get-Location).Path )"
 
-        # Debug
-        if ($g_debugFlag -band 4) { Write-Verbose "Verbose stream: $VerbosePreference" }
-        if ($g_debugFlag -band 4) { Write-Verbose "Debug stream: $DebugPreference" }
 
         # Get the configuration as a string
         if ($ConfigAsString) {
@@ -239,6 +239,6 @@ function Log-Rotate {
         # Finish up with dumping status
         $LogFactory.DumpStatus()
     }catch {
-        Write-Error "Stopped with errors. $(Get-Exception-Message $_)" -ErrorAction $CallerEA
+        Write-Error -Exception $_.Exception -ErrorAction $CallerEA
     }
 }

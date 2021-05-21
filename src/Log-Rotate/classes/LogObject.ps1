@@ -22,12 +22,12 @@ $LogObject = [PSCustomObject]@{
                         # File exists.
                         Write-Verbose "Error creating output file $my_previous_fullname`: File exists"
                     }else {
-                        if (!$g_debugFlag) {
+                        if (!$DebugFlag) {
                             Copy-Item $my_fullname $my_previous_fullname -ErrorAction Stop
                         }
                         if ($copytruncate) {
                             Write-Verbose "Truncating $my_fullname"
-                            if (!$g_debugFlag) {
+                            if (!$DebugFlag) {
                                 Clear-Content $my_fullname
                             }
                         }else {
@@ -41,12 +41,12 @@ $LogObject = [PSCustomObject]@{
                         # File exists.
                         Write-Verbose "Error creating output file $my_previous_fullname`: File exists"
                     }else {
-                        if (!$g_debugFlag) {
+                        if (!$DebugFlag) {
                             Move-Item $my_fullname $my_previous_fullname -Force
                         }
                         if ($create) {
                             Write-Verbose "Creating new log file $my_fullname"
-                            if (!$g_debugFlag) {
+                            if (!$DebugFlag) {
                                 $newitem = New-Item $my_fullname -ItemType File | Out-Null
                                 if ($newitem) {
 
@@ -102,7 +102,7 @@ $LogObject = [PSCustomObject]@{
 
                         # Rename old logs
                         Write-Verbose "Renaming $source_fullName to $destination_fullName (rotatecount $rotate, logstart $start, i $i)"
-                        if ($g_debugFlag) { continue }
+                        if ($DebugFlag) { continue }
                         if (Test-Path $source_fullName) {
                             Try {
                                 Move-Item -Path $source_fullName -Destination $destination_fullName -Force
@@ -135,7 +135,7 @@ $LogObject = [PSCustomObject]@{
                     $params = @( 'rn', $fullName, '*', $baseName )
                     try {
                         Write-Verbose "Rename log inside compressed archive $fullName to $baseName"
-                        if ($g_debugFlag) {
+                        if ($DebugFlag) {
                             continue
                         }
 
@@ -189,7 +189,7 @@ $LogObject = [PSCustomObject]@{
             try {
                 Write-Verbose "Compressing log with: $compresscmd"
                 Write-Verbose "Compress command line: $compresscmd $( $params -join ' ' )"
-                if ($g_debugFlag) {
+                if ($DebugFlag) {
                     return
                 }
 
@@ -342,7 +342,7 @@ $LogObject = [PSCustomObject]@{
                 }
 
                 # Delete file
-                if (!$g_debugFlag) {
+                if (!$DebugFlag) {
                     Remove-Item $file_fullname
                 }else {
                     # For debugging to simulate deleted file
@@ -1047,8 +1047,8 @@ $LogObject | Add-Member -Name 'PostPostRotate' -MemberType ScriptMethod -Value {
             if ($rotate -gt 0) {
                 $keep_prev_count = $rotate
                 $prev_files = Get-Files $my_previous_noncompressed_regex $my_previous_directory | Where-Object {
-                                                                                                        !$g_debugFlag -or
-                                                                                                        ($g_debugFlag -and $_.FullName -notin $debug_my_prevfilespurged_fullnames )
+                                                                                                        !$DebugFlag -or
+                                                                                                        ($DebugFlag -and $_.FullName -notin $debug_my_prevfilespurged_fullnames )
                                                                                                     }
 
                 Remove-Old-Files $prev_files $keep_prev_count 1
@@ -1091,8 +1091,8 @@ $LogObject | Add-Member -Name 'PostPostRotate' -MemberType ScriptMethod -Value {
             # Delete old compressed logs
             if ($rotate -gt 0) {
                 $prev_files = Get-Files $my_previous_compressed_regex $my_previous_directory | Where-Object {
-                    !$g_debugFlag -or
-                    ($g_debugFlag -and $_.FullName -notin $debug_my_prevfilespurged_fullnames )
+                    !$DebugFlag -or
+                    ($DebugFlag -and $_.FullName -notin $debug_my_prevfilespurged_fullnames )
                 }
                 Remove-Old-Files $prev_files $keep_prev_compressed_count 1
             }

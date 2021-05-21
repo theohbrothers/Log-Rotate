@@ -113,7 +113,6 @@ function New-BlockFactory {
                     $yes = $_.Value
 
                     if ( $child.ContainsKey($yes) -and (!$child.ContainsKey($no)) -and $parent.ContainsKey($no) ) {
-                        if ($g_debugFlag -band 4) { Write-Verbose "I said $yes, I didn't say $no, although my parent said $no, I'll still go ahead." }
                         $my_options.Remove($no)
                     }
                 }

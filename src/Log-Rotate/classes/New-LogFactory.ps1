@@ -68,7 +68,7 @@ function New-LogFactory {
                     # The reason for using the following code is only because the cmdlets such as Convert-Path, Resolve-Path must point to an existing item.
                     # If debugging didn't create the file, we would have to manually normalize the status file path (i.e. get it's absolute path).
                     <#
-                    if ($g_debugFlag) {
+                    if ($DebugFlag) {
                         $is_home = $statusfile_path -match '^~'
                         if ($is_home) {
                             # It's an absolute path
@@ -128,7 +128,7 @@ function New-LogFactory {
         # Always test for write permissions on the status file
         try {
             '' | Out-File $this.StatusFile_FullName -Append -Force
-            if (!$status -and $g_debugFlag) {
+            if (!$status -and $DebugFlag) {
                 # We're running Log-Rotate the first time in debug mode.
                 Remove-Item $this.StatusFile_FullName
             }
@@ -162,7 +162,7 @@ function New-LogFactory {
     $LogFactory | Add-Member -Name 'DumpStatus' -MemberType ScriptMethod -Value {
 
         try {
-            if (!$g_debugFlag) {
+            if (!$DebugFlag) {
                 # Update my state with each logs rotation status
                 $this.GetAll() | Where-Object { $_.Status['rotation_datetime'] } | ForEach-Object {
                     $rotationDateISO = $_.Status['rotation_datetime'].ToString('s')

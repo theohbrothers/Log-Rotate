@@ -8,7 +8,7 @@ function Get-Exception-Message ($ErrorRecord) {
         }
     }
     $Message = Get-InnerExceptionMessage $ErrorRecord.Exception
-    if ($g_debugFlag -band 2) {
+    if ($DebugFlag -band 2) {
         $Message = $Message  + "`nStacktrace:`n" + $ErrorRecord.Exception.ErrorRecord.ScriptStackTrace
     }
     $Message
