@@ -35,13 +35,14 @@
         # PSData = @{           # Properties within PSData will be correctly added to the manifest via Update-ModuleManifest without the PSData key. Leave the key commented out.
             Tags = @(
                 'pwsh',
-                'powershell ',
-                'logrotate ',
+                'powershell',
+                'module'
+                'logrotate',
                 'log',
-                'logs',
-                'log-management ',
-                'log-rotation ',
-                'log-administration'
+                'log-administration',
+                'log-management',
+                'log-rotation',
+                'logs'
             )
             LicenseUri = 'https://raw.githubusercontent.com/theohbrothers/Log-Rotate/master/LICENSE'
             ProjectUri = 'https://github.com/theohbrothers/Log-Rotate'

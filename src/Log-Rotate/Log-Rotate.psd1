@@ -95,7 +95,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = 'pwsh','powershell ','logrotate ','log','logs','log-management ','log-rotation ','log-administration'
+        Tags = 'pwsh','powershell','module','logrotate','log','log-administration','log-management','log-rotation','logs'
 
         # A URL to the license for this module.
         LicenseUri = 'https://raw.githubusercontent.com/theohbrothers/Log-Rotate/master/LICENSE'
