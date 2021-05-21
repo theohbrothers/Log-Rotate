@@ -38,7 +38,7 @@
         {
             "label": "Build: Generate module manifest",
             "type": "shell",
-            "command": "MODULE_VERSION=${input:MODULE_VERSION} pwsh -Command 'build/PSModulePublisher/src/module/Generate-ModuleManifest.ps1 -DefinitionFile build/definitions/modulemanifest/definition.ps1 -Path src/Type-Pwsh/Type-Pwsh.psd1'",
+            "command": "MODULE_VERSION=${input:MODULE_VERSION} pwsh -Command 'build/PSModulePublisher/src/module/Generate-ModuleManifest.ps1 -DefinitionFile build/definitions/modulemanifest/definition.ps1 -Path src/Log-Rotate/Log-Rotate.psd1'",
             "group": {
                 "isDefault": true,
                 "kind": "build"
@@ -47,13 +47,13 @@
         {
             "label": "Publish module (dry run)",
             "type": "shell",
-            "command": "NUGET_API_KEY=${input:NUGET_API_KEY} MODULE_VERSION=${input:MODULE_VERSION} pwsh -Command 'build/PSModulePublisher/src/Invoke-Publish.ps1 -ModuleManifestPath src/Type-Pwsh/Type-Pwsh.psd1 -Repository PSGallery -DryRun'",
+            "command": "NUGET_API_KEY=${input:NUGET_API_KEY} MODULE_VERSION=${input:MODULE_VERSION} pwsh -Command 'build/PSModulePublisher/src/Invoke-Publish.ps1 -ModuleManifestPath src/Log-Rotate/Log-Rotate.psd1 -Repository PSGallery -DryRun'",
             "group": "build"
         },
         {
             "label": "Publish module",
             "type": "shell",
-            "command": "NUGET_API_KEY=${input:NUGET_API_KEY} MODULE_VERSION=${input:MODULE_VERSION} pwsh -Command 'build/PSModulePublisher/src/Invoke-Publish.ps1 -ModuleManifestPath src/Type-Pwsh/Type-Pwsh.psd1 -Repository PSGallery'",
+            "command": "NUGET_API_KEY=${input:NUGET_API_KEY} MODULE_VERSION=${input:MODULE_VERSION} pwsh -Command 'build/PSModulePublisher/src/Invoke-Publish.ps1 -ModuleManifestPath src/Log-Rotate/Log-Rotate.psd1 -Repository PSGallery'",
             "group": "build"
         },
 
