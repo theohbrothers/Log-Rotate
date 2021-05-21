@@ -62,9 +62,6 @@ $BlockFactory = [PSCustomObject]@{
                 [Regex]$options_allowed_regex,
                 [string[]]$options_not_switches
             )
-            if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Options] Verbose stream: $VerbosePreference" }
-            if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Options] Debug stream: $DebugPreference" }
-            if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Options] Erroraction: $ErrorActionPreference" }
 
             $matches = $options_allowed_regex.Matches($configString)
             if ($matches.success) {
@@ -126,10 +123,6 @@ $BlockFactory = [PSCustomObject]@{
         # Returns an array of log files, that match a given blockpath pattern but whose fullpath is not already present in a unique store
         function Get-Block-Logs {
             param ([object]$blockObject)
-
-            if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Block-Logs] Verbose stream: $VerbosePreference" }
-            if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Block-Logs] Debug stream: $DebugPreference" }
-            if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Get-Block-Logs] Erroraction: $ErrorActionPreference" }
 
             $blockpath = $blockObject['Path']
             $opt_tabooext = $blockObject['Options']['tabooext']
@@ -215,10 +208,6 @@ $BlockFactory = [PSCustomObject]@{
 $BlockFactory | Add-Member -Name 'Create' -MemberType ScriptMethod -Value {
     param ([string]$FullConfig)
 
-    if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Create] Verbose stream: $VerbosePreference" }
-    if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Create] Debug stream: $DebugPreference" }
-    if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Create] Erroraction: $ErrorActionPreference" }
-
     # Unpack my properties
     . $this.Constants
 
@@ -226,13 +215,11 @@ $BlockFactory | Add-Member -Name 'Create' -MemberType ScriptMethod -Value {
     . $this.PrivateMethods
 
     # Parse Full Config for global options as hashtable
-    if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Create][Getting global options]" }
     $globalconfig = $g_localconfigs_regex.Replace($FullConfig, '')
     Get-Options $globalconfig $this.GlobalOptions $g_globaloptions_allowed $g_globaloptions_allowed_regex $g_options_not_switches
 
     # Parse Full Config for all found local block(s) path pattern, options, and matching log files, storing them as hashtable. Override the global options.
     # TODO: Regex for localconfigs to match paths on multiple lines before { }
-    if ($g_debugFlag -band 4) { Write-Debug "[BlockFactory][Create][Getting block options]" }
     $matches = $g_localconfigs_regex.Matches($FullConfig)
     if ($matches.success) {
         foreach ($localconfig in $matches) {

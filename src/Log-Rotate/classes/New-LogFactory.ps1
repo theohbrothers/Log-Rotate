@@ -17,10 +17,6 @@ function New-LogFactory {
     $LogFactory | Add-Member -Name 'InitStatus' -MemberType ScriptMethod -Value {
         param ([string]$statusfile_path)
 
-        if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Verbose stream: $VerbosePreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Debug stream: $DebugPreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Erroraction: $ErrorActionPreference" }
-
         # If no status file is specified, we'll consider it to be in script directory called 'Log-Rotate.status'
         if (!$statusfile_path) {
             $statusfile_path = $this.StatusFile_FullName
@@ -143,10 +139,6 @@ function New-LogFactory {
     $LogFactory | Add-Member -Name 'Create' -MemberType ScriptMethod -Value {
         param ([System.IO.FileInfo]$logfile, [hashtable]$options)
 
-        if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Verbose stream: $VerbosePreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Debug stream: $DebugPreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][Create] Erroraction: $ErrorActionPreference" }
-
         function Get-Status([System.IO.FileInfo]$file) {
             $lastRotationDate = if ($this.Status.ContainsKey($file.FullName)) {
                                     $this.Status[$file.FullName]
@@ -168,10 +160,6 @@ function New-LogFactory {
         return $this.LogObjects
     }
     $LogFactory | Add-Member -Name 'DumpStatus' -MemberType ScriptMethod -Value {
-
-        if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][DumpStatus] Verbose stream: $VerbosePreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][DumpStatus] Debug stream: $DebugPreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "[LogFactory][DumpStatus] Erroraction: $ErrorActionPreference" }
 
         try {
             if (!$g_debugFlag) {

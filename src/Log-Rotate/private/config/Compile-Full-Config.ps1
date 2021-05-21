@@ -1,11 +1,6 @@
 function Compile-Full-Config {
     param ([string]$MultipleConfig)
 
-
-    if ($g_debugFlag -band 4) { Write-Debug "[Compile-Full-Config] Verbose stream: $VerbosePreference" }
-    if ($g_debugFlag -band 4) { Write-Debug "[Compile-Full-Config] Debug stream: $DebugPreference" }
-    if ($g_debugFlag -band 4) { Write-Debug "[Compile-Full-Config] Erroraction: $ErrorActionPreference" }
-
     [Scriptblock]$matchEvaluator = {
         param ($match)
 

@@ -162,10 +162,6 @@ function Log-Rotate {
         # Debug
         if ($g_debugFlag -band 4) { Write-Verbose "Verbose stream: $VerbosePreference" }
         if ($g_debugFlag -band 4) { Write-Verbose "Debug stream: $DebugPreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "Erroraction: $ErrorActionPreference" }
-        if ($g_debugFlag -band 4) { Write-Debug "g_debugFlag: $g_debugFlag" }
-        if ($g_debugFlag -band 4) { Write-Debug "CallerEA: $CallerEA" }
-        if ($g_debugFlag -band 4) { Write-Debug "ErrorActionPreference: $ErrorActionPreference" }
 
         # Get the configuration as a string
         if ($ConfigAsString) {

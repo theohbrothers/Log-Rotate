@@ -6,9 +6,6 @@ function Get-Size-Bytes {
     if (!$size_str) {
         $size_str = '0'
     }
-    if ($g_debugFlag -band 4) { Write-Debug "[Get-Size-Bytes] Verbose stream: $VerbosePreference" }
-    if ($g_debugFlag -band 4) { Write-Debug "[Get-Size-Bytes] Debug stream: $DebugPreference" }
-    if ($g_debugFlag -band 4) { Write-Debug "[Get-Size-Bytes] Erroraction: $ErrorActionPreference" }
 
     if ($size_str -match '(?:[0-9]+|[0-9]+(?:k|M|G))$') {
         $size_unit = $size_str -replace '[0-9]+'
