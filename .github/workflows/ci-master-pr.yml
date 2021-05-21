@@ -274,10 +274,11 @@ jobs:
         MODULE_VERSION=$( echo "${REF}" | sed 's/^v*//' )
 
         # Generate the new module manifest
-        MODULE_VERSION=${MODULE_VERSION} pwsh -Command 'build/PSModulePublisher/src/module/Generate-ModuleManifest.ps1 -DefinitionFile build/definitions/modulemanifest/definition.ps1 -Path src/Type-Pwsh/Type-Pwsh.psd1'
+        MODULE_NAME=$(basename $(pwd))
+        MODULE_VERSION=${MODULE_VERSION} pwsh -Command "build/PSModulePublisher/src/module/Generate-ModuleManifest.ps1 -DefinitionFile build/definitions/modulemanifest/definition.ps1 -Path src/$MODULE_NAME/$MODULE_NAME.psd1"
 
         # Publish the module
-        NUGET_API_KEY=${NUGET_API_KEY} MODULE_VERSION=${MODULE_VERSION} pwsh -Command 'build/PSModulePublisher/src/Invoke-Publish.ps1 -ModuleManifestPath src/Type-Pwsh/Type-Pwsh.psd1 -Repository PSGallery'
+        NUGET_API_KEY=${NUGET_API_KEY} MODULE_VERSION=${MODULE_VERSION} pwsh -Command "build/PSModulePublisher/src/Invoke-Publish.ps1 -ModuleManifestPath src/$MODULE_NAME/$MODULE_NAME.psd1 -Repository PSGallery"
 
   publish-draft-release:
     needs: [test-powershell-5-1-windows-2016, test-powershell-5-1-windows-2019, test-powershell-6-0, test-powershell-6-1, test-powershell-6-1, test-powershell-7-0, test-powershell-7-1, test-powershell-7-2, publish-to-psgallery]
