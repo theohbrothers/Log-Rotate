@@ -122,7 +122,8 @@ function Process-Local-Block  {
             try {
                 Get-Command $compresscmd -ErrorAction Stop | Out-Null
             }catch {
-                Write-Error "Skipping log pattern $blockpath because of an invalid compress command '$compresscmd'. $(Get-Exception-Message $_)" -ErrorAction Stop
+                Write-Error "Skipping log pattern $blockpath because of an invalid compress command '$compresscmd'. " -ErrorAction Continue
+                throw
             }
         }
         # Validate dateformat if using dateext
@@ -144,7 +145,8 @@ function Process-Local-Block  {
                     Write-Error "Skipping log pattern $blockpath because size cannot be 0." -ErrorAction Stop
                 }
             }catch {
-                Write-Error "Skipping log pattern $blockpath because of an invalid 'size' option. $(Get-Exception-Message $_)" -ErrorAction Stop
+                Write-Error "Skipping log pattern $blockpath because of an invalid 'size' option. " -ErrorAction Continue
+                throw
             }
         }
 
@@ -157,8 +159,8 @@ function Process-Local-Block  {
                     Write-Error "Skipping log pattern $blockpath because minsize cannot be 0." -ErrorAction Stop
                 }
             }catch {
-                #throw "Skipping log pattern $blockpath because of an invalid 'minsize' option. $(Get-Exception-Message $_)"
-                Write-Error "Skipping log pattern $blockpath because of an invalid 'minsize' option. $(Get-Exception-Message $_)" -ErrorAction Stop
+                Write-Error "Skipping log pattern $blockpath because of an invalid 'minsize' option. " -ErrorAction Continue
+                throw
             }
         }
     }
@@ -203,7 +205,7 @@ function Process-Local-Block  {
                             Write-Verbose "    log does not need rotating."
                         }
                     }catch {
-                        Write-Error "Skipping over processing log $($logfile.FullName) because $(Get-Exception-Message $_)" -ErrorAction Continue
+                        Write-Error "Skipping over processing log $($logfile.FullName)." -ErrorAction Continue
                     }
                 }
 
@@ -216,7 +218,8 @@ function Process-Local-Block  {
                             Write-Verbose "Running firstaction script"
                             Start-Script $firstaction $blockpath -ErrorAction $CallerEA
                         }catch {
-                            Write-Error "Failed to run firstaction script for $blockpath because $(Get-Exception-Message $_)" -ErrorAction $CallerEA
+                            Write-Error "Failed to run firstaction script for $blockpath." -ErrorAction Continue
+                            throw
                         }
                     }
 
@@ -230,7 +233,8 @@ function Process-Local-Block  {
                                 $log = $_
                                 $log.PrePrerotate()
                             }catch {
-                                Write-Error "Failed to rotate log $($log['logfile'].FullName). $(Get-Exception-Message $_)" -ErrorAction Continue
+                                Write-Error "Failed to rotate log $($log['logfile'].FullName)." -ErrorAction Continue
+                                throw
                             }
                         }
 
@@ -241,7 +245,8 @@ function Process-Local-Block  {
                                 Write-Verbose "Running shared prerotate script"
                                 Start-Script $prerotate $blockpath -ErrorAction $CallerEA
                             }catch {
-                                Write-Error "Failed to run shared prerotate script for $blockpath. $(Get-Exception-Message $_)" -ErrorAction Stop
+                                Write-Error "Failed to run shared prerotate script for $blockpath. " -ErrorAction Continue
+                                throw
                             }
                         }
 
@@ -252,7 +257,8 @@ function Process-Local-Block  {
                                 $log = $_
                                 $log.RotateMainOnly()
                             }catch {
-                                Write-Error "Failed to rotate log $($log['logfile'].FullName). $(Get-Exception-Message $_)" -ErrorAction Continue
+                                Write-Error "Failed to rotate log $($log['logfile'].FullName)." -ErrorAction Continue
+                                throw
                             }
                         }
 
@@ -263,7 +269,8 @@ function Process-Local-Block  {
                                 # Script output will go down the pipeline
                                 Start-Script $postrotate $blockpath -ErrorAction $CallerEA
                             }catch {
-                                Write-Error "Failed to run shared postrotate script for $blockpath. $(Get-Exception-Message $_)" -ErrorAction Stop
+                                Write-Error "Failed to run shared postrotate script for $blockpath. " -ErrorAction Continue
+                                throw
                             }
                         }
 
@@ -274,7 +281,8 @@ function Process-Local-Block  {
                                 $log = $_
                                 $log.PostPostRotate()
                             }catch {
-                                Write-Error "Failed to rotate log $($log['logfile'].FullName). $(Get-Exception-Message $_)" -ErrorAction Continue
+                                Write-Error "Failed to rotate log $($log['logfile'].FullName)." -ErrorAction Continue
+                                throw
                             }
                         }
                     }else {
@@ -288,7 +296,7 @@ function Process-Local-Block  {
                                 if ( $_.status.rotate -and $postrotate ) { $_.Postrotate() }
                                 if ( ! $postrotate -or ( $postrotate -and $_.status.postrotate ) ) { $_.PostPostRotate() }
                             }catch {
-                                Write-Error $(Get-Exception-Message $_) -ErrorAction $CallerEA
+                                throw
                             }
                         }
                     }
@@ -300,7 +308,8 @@ function Process-Local-Block  {
                             Write-Verbose "Running lastaction script" -ErrorAction Stop
                             Start-Script $lastaction $blockpath -ErrorAction $CallerEA
                         }catch {
-                            Write-Error "Failed to run lastaction script for $blockpath. $(Get-Exception-Message $_)" -ErrorAction Stop
+                            Write-Error "Failed to run lastaction script for $blockpath. " -ErrorAction Continue
+                            throw
                         }
                     }
                 }else {
