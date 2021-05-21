@@ -28,7 +28,8 @@ function New-LogFactory {
                 $exists = Test-Path -LiteralPath $statusfile_path -ErrorAction Stop
             }catch {
                 # Illegal characters in path
-                throw "STATUSFILE: WARNING: Invalid status file $statusfile_path . $( Get-Exception-Message $_ )"
+                Write-Error "STATUSFILE: WARNING: Invalid status file $statusfile_path" -Continue
+                throw
             }
 
             if ($exists) {
@@ -47,7 +48,8 @@ function New-LogFactory {
                     # Read status
                     $status = Get-Content $this.StatusFile_FullName -Raw
                 }catch {
-                    throw "STATUSFILE: WARNING: Status file $( $this.StatusFile_FullName ) could not be read. $( Get-Exception-Message $_ )"
+                    Write-Error "STATUSFILE: WARNING: Status file $( $this.StatusFile_FullName ) could not be read." -ErrorAction Continue
+                    throw
                 }
             }else {
                 # Create a new status file, creating all directories if needed. If a relative path was given, it will be resolved to the current working directory.
@@ -96,7 +98,8 @@ function New-LogFactory {
                     }
                     #>
                 }catch {
-                    throw "STATUSFILE: WARNING: Status file $statusfile_path could not be created. $( Get-Exception-Message $_ )"
+                    Write-Error "STATUSFILE: WARNING: Status file $statusfile_path could not be created" -ErrorAction Continue
+                    throw
                 }
             }
         }
@@ -133,7 +136,8 @@ function New-LogFactory {
                 Remove-Item $this.StatusFile_FullName
             }
         }catch {
-            throw "STATUSFILE: WARNING: Insufficient write permissions for status file $( $this.StatusFile_FullName ). Resolve this error before continuing. Reason: $( Get-Exception-Message $_ )"
+            Write-Error "STATUSFILE: WARNING: Insufficient write permissions for status file $( $this.StatusFile_FullName ). Resolve this error before continuing." -ErrorAction Continue
+            throw
         }
     }
     $LogFactory | Add-Member -Name 'Create' -MemberType ScriptMethod -Value {
@@ -191,7 +195,8 @@ function New-LogFactory {
                 Write-Verbose "Writing status file to $($this.StatusFile_FullName)"
             }
         }catch {
-            throw "Failed to write state file! Reason: $(Get-Exception-Message $_)"
+            Write-Error "Failed to write state file." -ErrorAction Continue
+            throw
         }
     }
 

@@ -197,7 +197,8 @@ function Log-Rotate {
                     }
                 }
             }catch {
-                Write-Error "Unable to retrieve content of config $Config. $(Get-Exception-Message $_)" -ErrorAction Stop
+                Write-Error "Unable to retrieve content of config $Config" -ErrorAction Continue
+                throw
             }
         }
 
@@ -241,6 +242,6 @@ function Log-Rotate {
         # Finish up with dumping status
         $LogFactory.DumpStatus()
     }catch {
-        Write-Error "Stopped with errors. $(Get-Exception-Message $_)" -ErrorAction $CallerEA
+        Write-Error -ErrorRecord $_ -ErrorAction $CallerEA
     }
 }
