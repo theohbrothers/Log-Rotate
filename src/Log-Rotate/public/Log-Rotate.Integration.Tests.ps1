@@ -34,21 +34,32 @@ Describe 'Log-Rotate' -Tag 'Integration' {
     function Init  {
         New-Item $configDir -ItemType Directory -Force > $null
         New-Item $configFile -ItemType File -Force > $null
-        $configFileContent | Out-File $configFile -Encoding utf8 -Force -NoNewline
+        # Do not write an empty file with BOM in Powershell <= 5
+        if ($configFileContent) {
+            $configFileContent | Out-File $configFile -Encoding utf8 -Force -NoNewline
+        }
 
         New-Item $configDir2 -ItemType Directory -Force > $null
         New-Item $configFile2 -ItemType File -Force > $null
-        $configFile2Content | Out-File $configFile2 -Encoding utf8 -Force -NoNewline
+        # Do not write an empty file with BOM in Powershell <= 5
+        if ($configFile2Content) {
+            $configFile2Content | Out-File $configFile2 -Encoding utf8 -Force -NoNewline
+        }
 
         New-Item $logDir -ItemType Directory -Force > $null
         New-Item $logOldDir -ItemType Directory -Force > $null
         New-Item $logFile -ItemType File -Force > $null
-        $logFileContent | Out-File $logFile -Encoding utf8 -Force -NoNewline
+        # Do not write an empty file with BOM in Powershell <= 5
+        if ($logFileContent) {
+            $logFileContent | Out-File $logFile -Encoding utf8 -Force -NoNewline
+        }
 
         New-Item $logDir2 -ItemType Directory -Force > $null
         New-Item $logOldDir2 -ItemType Directory -Force > $null
         New-Item $logFile2 -ItemType File -Force > $null
-        $logFile2Content | Out-File $logFile2 -Encoding utf8 -Force -NoNewline
+        if ($logFile2Content) {
+            $logFile2Content | Out-File $logFile2 -Encoding utf8 -Force -NoNewline
+        }
 
         New-Item $stateDir -ItemType Directory -Force > $null
     }
