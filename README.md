@@ -1,5 +1,9 @@
 # Log-Rotate
 
+[![github-actions](https://github.com/theohbrothers/Log-Rotate/workflows/ci-master-pr/badge.svg)](https://github.com/theohbrothers/Log-Rotate/actions)
+[![github-release](https://img.shields.io/github/v/release/theohbrothers/Log-Rotate?style=flat-square)](https://github.com/theohbrothers/Log-Rotate/releases/)
+[![powershell-gallery-release](https://img.shields.io/powershellgallery/v/Log-Rotate?logo=powershell&logoColor=white&label=PSGallery&labelColor=&style=flat-square)](https://www.powershellgallery.com/packages/Log-Rotate/)
+
 A replica of the [logrotate utility](https://github.com/logrotate/logrotate  "logrotate utility"), except this also runs on Windows systems.
 
 It can be used as a *Powershell Script* or *Module*.
