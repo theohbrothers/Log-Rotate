@@ -108,18 +108,6 @@ function Log-Rotate {
     # Always use verbose mode?
     #$VerbosePreference = 'Continue'
 
-    # Global scope debug preference
-    $DebugPreferenceOld = $DebugPreference
-    if ($DebugPreference -eq 'Inquire') {
-        # If we're using the -debug flag, always use -verbose mode.
-        $DebugPreference = 'Continue'
-        # Preserve our set debug flag for testing
-        $WhatIf = if ($WhatIf) { $WhatIf } else { 1 }
-    }else {
-         # If we're not using the -debug flag, debug should stay silent instead of prompting.
-        $DebugPreference = 'SilentlyContinue'
-    }
-
     # PS Defaults
     $PSDefaultParameterValues['*-Content:Force'] = $true
     $PSDefaultParameterValues['*-Item:Force'] = $true
