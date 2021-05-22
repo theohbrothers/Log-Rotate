@@ -15,5 +15,3 @@ Get-ChildItem "$MODULE_BASE_DIR/private/" -recurse | ? { $_.Extension -eq '.ps1'
 Get-ChildItem "$MODULE_BASE_DIR/public/*.ps1" -exclude *.Tests.ps1 | % {
     . $_.FullName
 }
-
-Export-ModuleMember -Function Log-Rotate
