@@ -45,6 +45,15 @@
             }
         },
         {
+            "label": "Build: Test module manifest",
+            "type": "shell",
+            "command": "MODULE_NAME=$(basename $(pwd)); MODULE_VERSION=${input:MODULE_VERSION} pwsh -Command \"build/PSModulePublisher/src/module/Test-ModuleManifest.ps1 -Path src/$MODULE_NAME/$MODULE_NAME.psd1\"",
+            "group": {
+                "isDefault": true,
+                "kind": "build"
+            }
+        },
+        {
             "label": "Publish module (dry run)",
             "type": "shell",
             "command": "MODULE_NAME=$(basename $(pwd)); NUGET_API_KEY=${input:NUGET_API_KEY} MODULE_VERSION=${input:MODULE_VERSION} pwsh -Command \"build/PSModulePublisher/src/Invoke-Publish.ps1 -ModuleManifestPath src/$MODULE_NAME/$MODULE_NAME.psd1 -Repository PSGallery -DryRun\"",
