@@ -88,9 +88,6 @@ function Log-Rotate {
     ,
         [alias("u")]
         [switch]$Usage
-    ,
-        [alias("v")]
-        [switch]$Version
     )
 
     if ($WhatIf) {
@@ -115,11 +112,7 @@ function Log-Rotate {
     $PSDefaultParameterValues['Out-File:Force'] = $true
     $PSDefaultParameterValues['Invoke-Command:ErrorAction'] = 'Stop'
 
-    # Prints version and exits
-    if ($Version) {
-        Write-Output "Log-Rotate $( (Get-Module Log-Rotate).Version )"
-        return
-    }
+    # Prints and exits
     if ($Help) {
         Write-Output (Get-Help Log-Rotate -Full)
         return

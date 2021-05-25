@@ -101,12 +101,6 @@ Describe "Log-Rotate" -Tag 'Unit' {
 
         $eaPreference =  'Stop'
 
-        It 'shows the version' {
-            $version = Log-Rotate -Version -ErrorAction $eaPreference
-
-            $version | Should -Match '\d+\.\d+\.\d+$'
-        }
-
         It 'shows the help' {
             $help = Log-Rotate -Help -ErrorAction $eaPreference
 
