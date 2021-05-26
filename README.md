@@ -18,7 +18,7 @@ If prompted to trust the repository, hit `Y` and `enter`.
 
 ## Log-Rotate vs `logrotate`
 
-Log-Rotate is an independent port of `logrotate`. It's made to work exactly the same way as the orignal `logrotate`, except it works in Powershell and especially Windows.
+Log-Rotate is an independent port of `logrotate`. It's made to work exactly the same way as the original `logrotate`, except it works in Powershell and especially Windows.
 
 - Same command line
 - Same config file format, meaning you can re-use your `*nix` configs
