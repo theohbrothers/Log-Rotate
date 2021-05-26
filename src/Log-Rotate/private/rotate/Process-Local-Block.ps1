@@ -219,7 +219,6 @@ function Process-Local-Block  {
                             Start-Script $firstaction $blockpath -ErrorAction $CallerEA
                         }catch {
                             Write-Error "Failed to run firstaction script for $blockpath." -ErrorAction Continue
-                            throw
                         }
                     }
 
@@ -234,7 +233,6 @@ function Process-Local-Block  {
                                 $log.PrePrerotate()
                             }catch {
                                 Write-Error "Failed to rotate log $($log['logfile'].FullName)." -ErrorAction Continue
-                                throw
                             }
                         }
 
@@ -246,7 +244,6 @@ function Process-Local-Block  {
                                 Start-Script $prerotate $blockpath -ErrorAction $CallerEA
                             }catch {
                                 Write-Error "Failed to run shared prerotate script for $blockpath. " -ErrorAction Continue
-                                throw
                             }
                         }
 
@@ -258,7 +255,6 @@ function Process-Local-Block  {
                                 $log.RotateMainOnly()
                             }catch {
                                 Write-Error "Failed to rotate log $($log['logfile'].FullName)." -ErrorAction Continue
-                                throw
                             }
                         }
 
@@ -270,7 +266,6 @@ function Process-Local-Block  {
                                 Start-Script $postrotate $blockpath -ErrorAction $CallerEA
                             }catch {
                                 Write-Error "Failed to run shared postrotate script for $blockpath. " -ErrorAction Continue
-                                throw
                             }
                         }
 
@@ -282,7 +277,6 @@ function Process-Local-Block  {
                                 $log.PostPostRotate()
                             }catch {
                                 Write-Error "Failed to rotate log $($log['logfile'].FullName)." -ErrorAction Continue
-                                throw
                             }
                         }
                     }else {
@@ -296,7 +290,7 @@ function Process-Local-Block  {
                                 if ( $_.status.rotate -and $postrotate ) { $_.Postrotate() }
                                 if ( ! $postrotate -or ( $postrotate -and $_.status.postrotate ) ) { $_.PostPostRotate() }
                             }catch {
-                                throw
+                                Write-Error -ErrorRecord $_ -ErrorAction Continue
                             }
                         }
                     }
@@ -309,7 +303,6 @@ function Process-Local-Block  {
                             Start-Script $lastaction $blockpath -ErrorAction $CallerEA
                         }catch {
                             Write-Error "Failed to run lastaction script for $blockpath. " -ErrorAction Continue
-                            throw
                         }
                     }
                 }else {
