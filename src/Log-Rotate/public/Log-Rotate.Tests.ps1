@@ -48,12 +48,12 @@ Describe "Log-Rotate" -Tag 'Unit' {
 
     Context 'Invalid parameters (Non-Terminating)' {
 
-        $eaPreference = 'Continue'
+        $ErrorActionPreference = 'Continue'
 
         It 'errors when config is null' {
             $invalidConfig = $null
 
-            $err = Log-Rotate -Config $invalidConfig -ErrorAction $eaPreference 2>&1
+            $err = Log-Rotate -Config $invalidConfig -ErrorVariable err 2>&1
             $err | ? { $_ -is [System.Management.Automation.ErrorRecord] } | % { $_.Exception.Message } | Should -Contain "No config file(s) specified."
         }
 
@@ -61,48 +61,48 @@ Describe "Log-Rotate" -Tag 'Unit' {
             $invalidConfig = 'foo'
             Mock Test-Path { $false }
 
-            $err = Log-Rotate -Config $invalidConfig -ErrorAction $eaPreference 2>&1
+            $err = Log-Rotate -Config $invalidConfig 2>&1
             $err | ? { $_ -is [System.Management.Automation.ErrorRecord] } | % { $_.Exception.Message } | Should -Contain "Invalid config path specified: $invalidConfig"
         }
 
         It 'errors when configAsString is null' {
             $invalidConfigAsString = $null
 
-            $err = Log-Rotate -ConfigAsString $invalidConfigAsString -ErrorAction $eaPreference 2>&1
+            $err = Log-Rotate -ConfigAsString $invalidConfigAsString 2>&1
             $err | ? { $_ -is [System.Management.Automation.ErrorRecord] } | % { $_.Exception.Message } | Should -Contain "No config file(s) specified."
         }
     }
 
     Context 'Invalid parameters (Terminating)' {
 
-        $eaPreference = 'Stop'
+        $ErrorActionPreference = 'Stop'
 
         It 'errors when config is null' {
             $invalidConfig = $null
 
-            { Log-Rotate -Config $invalidConfig -ErrorAction $eaPreference 2>$null } | Should -Throw "No config file(s) specified."
+            { Log-Rotate -Config $invalidConfig 2>$null } | Should -Throw "No config file(s) specified."
         }
 
         It 'errors when config is an non-existing file' {
             $invalidConfig = 'foo'
             Mock Test-Path { $false }
 6
-            { Log-Rotate -Config $invalidConfig -ErrorAction $eaPreference  2>$null } | Should -Throw "Invalid config path specified: $invalidConfig"
+            { Log-Rotate -Config $invalidConfig  2>$null } | Should -Throw "Invalid config path specified: $invalidConfig"
         }
 
         It 'errors when configAsString is null' {
             $invalidConfigAsString = $null
 
-            { Log-Rotate -ConfigAsString $invalidConfigAsString -ErrorAction $eaPreference 2>$null } | Should -Throw "No config file(s) specified."
+            { Log-Rotate -ConfigAsString $invalidConfigAsString 2>$null } | Should -Throw "No config file(s) specified."
         }
     }
 
     Context 'Functionality' {
 
-        $eaPreference =  'Stop'
+        $ErrorActionPreference = 'Stop'
 
         It 'shows the help' {
-            $help = Log-Rotate -Help -ErrorAction $eaPreference
+            $help = Log-Rotate -Help
 
             $help | Should -Not -Be $null
         }
@@ -111,7 +111,7 @@ Describe "Log-Rotate" -Tag 'Unit' {
             . $initScriptBlock
             Mock Compile-Full-Config {}
 
-            Log-Rotate -config $configFile -ErrorAction $eaPreference
+            Log-Rotate -config $configFile
 
             Assert-MockCalled Compile-Full-Config -Times 1
         }
@@ -121,7 +121,7 @@ Describe "Log-Rotate" -Tag 'Unit' {
             Mock Test-Path -ParameterFilter { $Path -eq 'foo' -and $PathType } { $false }
             Mock Compile-Full-Config {}
 
-            Log-Rotate -config $configFile -ErrorAction $eaPreference
+            Log-Rotate -config $configFile
 
             Assert-MockCalled Compile-Full-Config -Times 1
         }
@@ -130,7 +130,7 @@ Describe "Log-Rotate" -Tag 'Unit' {
             . $initScriptBlock
             Mock Validate-Full-Config {}
 
-            Log-Rotate -config $configFile -ErrorAction $eaPreference
+            Log-Rotate -config $configFile
 
             Assert-MockCalled Validate-Full-Config -Times 1
         }
@@ -151,7 +151,7 @@ Describe "Log-Rotate" -Tag 'Unit' {
                 $BlockFactory
             }
 
-            Log-Rotate -config $configFile -ErrorAction $eaPreference
+            Log-Rotate -config $configFile
 
             Assert-MockCalled New-BlockFactory -Times 1
         }
@@ -159,7 +159,7 @@ Describe "Log-Rotate" -Tag 'Unit' {
         It 'instantiates singleton LogFactory' {
             . $initScriptBlock
 
-            Log-Rotate -config $configFile -ErrorAction $eaPreference
+            Log-Rotate -config $configFile
 
             Assert-MockCalled New-LogFactory -Times 1
         }
@@ -167,7 +167,7 @@ Describe "Log-Rotate" -Tag 'Unit' {
         It 'instantiates singleton LogObject' {
             . $initScriptBlock
 
-            Log-Rotate -config $configFile -ErrorAction $eaPreference
+            Log-Rotate -config $configFile
 
             Assert-MockCalled New-LogObject -Times 1
         }
@@ -190,7 +190,7 @@ Describe "Log-Rotate" -Tag 'Unit' {
                 $BlockFactory
             }
 
-            $result = Log-Rotate -config $configFile -ErrorAction $eaPreference
+            $result = Log-Rotate -config $configFile
 
             $result | Should -Be 'create'
         }
@@ -206,7 +206,7 @@ Describe "Log-Rotate" -Tag 'Unit' {
                 $LogFactory
             }
 
-            $result = Log-Rotate -config $configFile -ErrorAction $eaPreference
+            $result = Log-Rotate -config $configFile
 
             $result | Should -Be 'initstatus'
         }
@@ -214,7 +214,7 @@ Describe "Log-Rotate" -Tag 'Unit' {
         It 'processes a block configuration' {
             . $initScriptBlock
 
-            Log-Rotate -config $configFile -ErrorAction $eaPreference
+            Log-Rotate -config $configFile
 
             Assert-MockCalled Process-Local-Block -Times 1
         }
@@ -231,9 +231,31 @@ Describe "Log-Rotate" -Tag 'Unit' {
                 $LogFactory
             }
 
-            $result = Log-Rotate -config $configFile -ErrorAction $eaPreference
+            $result = Log-Rotate -config $configFile
 
             $result | Should -Be 'dumpstatus'
         }
+
+        It 'Throws no exception only when specified' {
+            . $initScriptBlock
+            Mock Process-Local-Block {
+                Write-Error 'foo' -ErrorAction Continue
+            }
+
+            # Expect no exception
+            $err = Log-Rotate -config $configFile -ErrorAction Continue  2>&1
+            $err | ? { $_ -is [System.Management.Automation.ErrorRecord] } | % { $_.Exception.Message } | Should -Be 'foo'
+        }
+
+        It 'Throws exception only when specified' {
+            . $initScriptBlock
+            Mock Process-Local-Block {
+                Write-Error 'foo' -ErrorAction Stop
+            }
+
+            # Expect exception
+            { Log-Rotate -config $configFile -ErrorAction Stop } | Should -Throw 'foo'
+        }
+
     }
 }
