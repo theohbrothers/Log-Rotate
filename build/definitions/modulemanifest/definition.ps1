@@ -22,10 +22,10 @@
     # TypesToProcess = @()
     # FormatsToProcess = @()
     # NestedModules = @()
-    FunctionsToExport = @()
-    CmdletsToExport = @(
-        'Log-Rotate'
+    FunctionsToExport = @(
+        Get-ChildItem $PSScriptRoot/../../../src/Log-Rotate/public -Exclude *.Tests.ps1 | % { $_.BaseName }
     )
+    CmdletsToExport = @()
     VariablesToExport = @()
     AliasesToExport = @()
     # DscResourcesToExport = @()
