@@ -6,7 +6,7 @@
     RootModule = 'Log-Rotate.psm1'
     # ModuleVersion = ''                            # Value will be set for each publication based on the tag ref. Defaults to '0.0.0' in development environments and regular CI builds
     GUID = '44347384-7b42-439e-b835-f8bdcfe0c33c'
-    Author = 'Log-Rotate'
+    Author = 'The Oh Brothers'
     CompanyName = 'The Oh Brothers'
     Copyright = '(c) 2017 The Oh Brothers'
     Description = 'A replica of the logrotate utility, except this also runs on Windows systems.'
