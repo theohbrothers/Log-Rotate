@@ -48,7 +48,7 @@ if ($Tag) {
         "$( $res2.FailedCount ) integration tests failed." | Write-Host
     }
 
-    if ($res -and $res.FailedCount -gt 0 -or $res2 -and $res2.FailedCount) {
+    if (($res -and $res.FailedCount -gt 0) -or ($res2 -and $res2.FailedCount)) {
         throw
     }
 }
