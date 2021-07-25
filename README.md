@@ -131,9 +131,9 @@ Scheduled Task Command line:
 
 ```powershell
 # Powershell
-Powershell 'Import-Module Log-Rotate; Log-Rotate -Config C:\configs\Log-Rotate\Log-Rotate.conf -State C:\var\Log-Rotate\Log-Rotate.status -Verbose' >> C:\logs\Log-Rotate.log
+powershell -Command 'Import-Module Log-Rotate; Log-Rotate -Config C:\configs\Log-Rotate\Log-Rotate.conf -State C:\var\Log-Rotate\Log-Rotate.status -Verbose' >> C:\logs\Log-Rotate.log
 # pwsh
-pwsh 'Import-Module Log-Rotate; Log-Rotate -Config C:\configs\Log-Rotate\Log-Rotate.conf -State C:\var\Log-Rotate\Log-Rotate.status -Verbose' >> C:\logs\Log-Rotate.log
+pwsh -Command 'Import-Module Log-Rotate; Log-Rotate -Config C:\configs\Log-Rotate\Log-Rotate.conf -State C:\var\Log-Rotate\Log-Rotate.status -Verbose' >> C:\logs\Log-Rotate.log
 ```
 
 #### *nix cron
@@ -158,7 +158,7 @@ Decide on a state file `/var/lib/Log-Rotate/Log-Rotate.status`.
 Run the command with `-WhatIf` to simulate the rotation, making sure everything is working.
 
 ```powershell
-pwsh 'Import-Module Log-Rotate; Log-Rotate -Config /etc/Log-Rotate.conf -State /var/lib/Log-Rotate/Log-Rotate.status -Verbose -WhatIf'
+pwsh -Command 'Import-Module Log-Rotate; Log-Rotate -Config /etc/Log-Rotate.conf -State /var/lib/Log-Rotate/Log-Rotate.status -Verbose -WhatIf'
 ```
 
 Decide on a log file `/var/log/Log-Rotate.log`.
@@ -166,7 +166,7 @@ Decide on a log file `/var/log/Log-Rotate.log`.
 Cron command line:
 
 ```powershell
-pwsh 'Import-Module Log-Rotate; Log-Rotate -Config /etc/Log-Rotate.conf -State /var/lib/Log-Rotate/Log-Rotate.status -Verbose' >> /var/log/Log-Rotate.log
+pwsh -Command 'Import-Module Log-Rotate; Log-Rotate -Config /etc/Log-Rotate.conf -State /var/lib/Log-Rotate/Log-Rotate.status -Verbose' >> /var/log/Log-Rotate.log
 ```
 
 ## Configuration
