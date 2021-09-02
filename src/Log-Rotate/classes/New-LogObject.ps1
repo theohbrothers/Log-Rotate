@@ -719,6 +719,10 @@ function New-LogObject {
                             if ($_now_dt.Month -gt $_last_dt.Month) {
                                 Write-Verbose "Time interval over. This is the first time logrotate is run this month. "
                                 return $true
+                            }elseif ($_now_dt.Year -gt $_last_dt.Year) {
+                                # The case where the current year is a new year
+                                Write-Verbose "Time interval over. Last rotation occured last year. Last rotation: $($_last_dt.ToString('s'))"
+                                return $true
                             }else {
                                 Write-Verbose "Time interval not over. Last rotation already occured this month. Last rotation: $($_last_dt.ToString('s'))"
                             }
