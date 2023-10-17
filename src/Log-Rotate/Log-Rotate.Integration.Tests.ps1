@@ -217,8 +217,9 @@ Describe 'Log-Rotate' -Tag 'Integration' {
 "$logFile" {
     compress
     compresscmd gzip
-    compressoptions -1 -S .foo  # Specify a suffix for gzip
-    compressext .foo
+    compressoptions -1
+    # compressoptions -1 -S .foo  # Specify a suffix for gzip (but not compatible with busybox gzip)
+    compressext .gz
 }
 "@
             Init
@@ -235,7 +236,7 @@ Describe 'Log-Rotate' -Tag 'Integration' {
             $rotatedLogItems[0] | Should -BeOfType [System.IO.FileSystemInfo]
 
             # Assert that the rotated log file should be named
-            $rotatedLogItems[0].Name | Should -Be "$( Split-Path $logFile -Leaf ).1.foo"
+            $rotatedLogItems[0].Name | Should -Be "$( Split-Path $logFile -Leaf ).1.gz"
         }
 
         It "Option 'copy': rotates a log file as a copy" {
