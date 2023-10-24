@@ -91,7 +91,15 @@ function Process-Local-Block  {
                                 $copy
                             }
         $options['copytruncate'] = if ($nocopytruncate) { $false } else { $copytruncate }
-        $options['create'] = if ($nocreate) { '' } else { $create }
+
+        $options['create'] = if ($nocreate) { '' } else {
+            # 'create' option's attributes are optional, in which case its value is an empty string
+            if ($PSBoundParameters.ContainsKey('create') -and $PSBoundParameters['create'] -eq '') {
+                ' ' # Set to a non-empty string
+            }else {
+                $create
+            }
+        }
         $options['delaycompress'] = if ($nodelaycompress) { $false } else { $delaycompress }
         $options['dateext'] = if ($nodateext) { $false } else { $dateext }
         $options['mail'] = if ($nomail) { $false } else { $mail }

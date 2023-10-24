@@ -298,7 +298,32 @@ Describe 'Log-Rotate' -Tag 'Integration' {
             $logFileHash.Hash | Should -Not -Be $rotatedLogFileHash.Hash
         }
 
-        It "Option 'create': rotates a log file and immediately creates a new original file" {
+        It "Option 'create' (without attributes): rotates a log file and immediately creates a new original file" {
+            $configFileContent = @"
+"$logFile" {
+    create
+}
+"@
+            Init
+
+            Log-Rotate -config $configFile -State $stateFile -ErrorAction $eaPreference #-Verbose
+
+            # Assert that the log file should remain
+            $logItem = Get-Item $logFile -ErrorAction SilentlyContinue
+            $logItem | Should -BeOfType [System.IO.FileSystemInfo]
+            $logItem.Name | Should -Be "$( Split-Path $logFile -Leaf )"
+            $logItem.Length | Should -Be 0
+
+            # Assert that the rotated log file should be there
+            $rotatedLogItems = @( Get-Item $logDir/* )
+            $rotatedLogItems.Count | Should -Be 2
+            $rotatedLogItems[1] | Should -BeOfType [System.IO.FileSystemInfo]
+
+            # Assert that the rotated log file should be named
+            $rotatedLogItems[1].Name | Should -Be "$( Split-Path $logFile -Leaf ).1"
+        }
+
+        It "Option 'create' (with mode, owner, and group attributes): rotates a log file and immediately creates a new original file" {
             $configFileContent = @"
 "$logFile" {
     create 700 1000 1000
