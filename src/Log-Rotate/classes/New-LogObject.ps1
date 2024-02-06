@@ -29,7 +29,7 @@ function New-LogObject {
                             if ($copytruncate) {
                                 Write-Verbose "Truncating $my_fullname"
                                 if (!$WhatIf) {
-                                    Clear-Content $my_fullname
+                                    "" | Out-File $my_fullname -NoNewline -Encoding ASCII
                                 }
                             }else {
                                 Write-Verbose "Not truncating $my_fullname"
