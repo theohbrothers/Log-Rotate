@@ -29,7 +29,11 @@ function New-LogObject {
                             if ($copytruncate) {
                                 Write-Verbose "Truncating $my_fullname"
                                 if (!$WhatIf) {
-                                    Clear-Content $my_fullname
+                                    if ($PSVersionTable.PSVersion.Major -le 6) {
+                                        "" | Out-File $my_fullname -NoNewline -Encoding ASCII
+                                    }else {
+                                        "" | Out-File $my_fullname -NoNewline -Encoding utf8
+                                    }
                                 }
                             }else {
                                 Write-Verbose "Not truncating $my_fullname"
