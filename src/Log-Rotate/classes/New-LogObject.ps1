@@ -29,7 +29,8 @@ function New-LogObject {
                             if ($copytruncate) {
                                 Write-Verbose "Truncating $my_fullname"
                                 if (!$WhatIf) {
-                                    Clear-Content $my_fullname
+                                    # Truncate the file
+                                    [IO.File]::WriteAllText($my_fullname, '')
                                 }
                             }else {
                                 Write-Verbose "Not truncating $my_fullname"
