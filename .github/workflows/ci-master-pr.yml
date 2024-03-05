@@ -117,6 +117,19 @@ jobs:
       run: |
         pwsh -NoLogo -NonInteractive -NoProfile -Command './test/test.ps1'
 
+  test-powershell-7-4:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/powershell:7.4-ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: Powershell version
+      run: |
+        pwsh -NoLogo -NonInteractive -NoProfile -Command '$PSVersionTable'
+    - name: Test
+      run: |
+        pwsh -NoLogo -NonInteractive -NoProfile -Command './test/test.ps1'
+
   update-draft-release:
     needs:
       - test-powershell-5-1-windows-2019
@@ -127,6 +140,7 @@ jobs:
       - test-powershell-7-1
       - test-powershell-7-2
       - test-powershell-7-3
+      - test-powershell-7-4
       - test-publish-to-psgallery
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
@@ -172,6 +186,7 @@ jobs:
       - test-powershell-7-1
       - test-powershell-7-2
       - test-powershell-7-3
+      - test-powershell-7-4
       - test-publish-to-psgallery
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
