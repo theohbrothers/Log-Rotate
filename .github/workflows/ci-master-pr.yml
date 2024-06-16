@@ -155,13 +155,24 @@ jobs:
 
   test-publish-to-psgallery:
     runs-on: ubuntu-latest
+    container:
+      image: theohbrothers/docker-powershell:7.4-ubuntu-22.04-git
     steps:
     - uses: actions/checkout@v1
       with:
         submodules: true
+    - name: Install wget
+      run: |
+        apt-get update && apt-get install -y wget
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '6'
     - name: Powershell version
       run: |
         pwsh -NoLogo -NonInteractive -NoProfile -Command '$PSVersionTable'
+    - name: Ignore git permissions
+      run: |
+        git config --global --add safe.directory "$( pwd )"
     - name: Publish (dry run)
       shell: pwsh
       env:
@@ -187,13 +198,24 @@ jobs:
       - test-publish-to-psgallery
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
+    container:
+      image: theohbrothers/docker-powershell:7.4-ubuntu-22.04-git
     steps:
     - uses: actions/checkout@v1
       with:
         submodules: true
+    - name: Install wget
+      run: |
+        apt-get update && apt-get install -y wget
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '6'
     - name: Powershell version
       run: |
         pwsh -NoLogo -NonInteractive -NoProfile -Command '$PSVersionTable'
+    - name: Ignore git permissions
+      run: |
+        git config --global --add safe.directory "$( pwd )"
     - name: Publish
       shell: pwsh
       env:
