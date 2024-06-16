@@ -29,7 +29,7 @@ jobs:
   test-powershell-6-0:
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/powershell:6.0.4-ubuntu-16.04
+      image: theohbrothers/docker-powershell:6.0.4-ubuntu-16.04-git
     steps:
     - uses: actions/checkout@v1
     - name: Powershell version
@@ -42,7 +42,7 @@ jobs:
   test-powershell-6-1:
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/powershell:6.1.3-ubuntu-18.04
+      image: theohbrothers/docker-powershell:6.1.3-ubuntu-18.04-git
     steps:
     - uses: actions/checkout@v1
     - name: Powershell version
@@ -55,7 +55,7 @@ jobs:
   test-powershell-6-2:
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/powershell:6.2.4-ubuntu-18.04
+      image: theohbrothers/docker-powershell:6.2.4-ubuntu-18.04-git
     steps:
     - uses: actions/checkout@v1
     - name: Powershell version
@@ -68,7 +68,7 @@ jobs:
   test-powershell-7-0:
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/powershell:7.0.3-ubuntu-18.04
+      image: theohbrothers/docker-powershell:7.0.3-ubuntu-18.04-git
     steps:
     - uses: actions/checkout@v1
     - name: Powershell version
@@ -81,7 +81,7 @@ jobs:
   test-powershell-7-1:
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/powershell:7.1.5-ubuntu-20.04
+      image: theohbrothers/docker-powershell:7.1.5-ubuntu-20.04-git
     steps:
     - uses: actions/checkout@v1
     - name: Powershell version
@@ -94,7 +94,7 @@ jobs:
   test-powershell-7-2:
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/powershell:7.2-ubuntu-20.04
+      image: theohbrothers/docker-powershell:7.2-ubuntu-22.04-git
     steps:
     - uses: actions/checkout@v1
     - name: Powershell version
@@ -107,7 +107,7 @@ jobs:
   test-powershell-7-3:
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/powershell:7.3-ubuntu-20.04
+      image: theohbrothers/docker-powershell:7.3-ubuntu-22.04-git
     steps:
     - uses: actions/checkout@v1
     - name: Powershell version
@@ -120,7 +120,7 @@ jobs:
   test-powershell-7-4:
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/powershell:7.4-ubuntu-22.04
+      image: theohbrothers/docker-powershell:7.4-ubuntu-22.04-git
     steps:
     - uses: actions/checkout@v1
     - name: Powershell version
