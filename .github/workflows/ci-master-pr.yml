@@ -169,12 +169,9 @@ jobs:
         NUGET_API_KEY: 'xxx'
       run: |
         $ErrorActionPreference = 'Stop'
-
-        # Generate the new module manifest
-        $moduleManifest = ./build/PSModulePublisher/src/PSModulePublisher/Public/Invoke-Build.ps1
-
-        # Publish the module
-        ./build/PSModulePublisher/src/PSModulePublisher/Public/Invoke-Publish.ps1 -ModuleManifestPath $moduleManifest -Repository PSGallery -DryRun
+        Import-Module ./build/PSModulePublisher/src/PSModulePublisher -Force
+        $moduleManifest = Invoke-Build
+        Invoke-Publish -ModuleManifestPath $moduleManifest -Repository PSGallery -DryRun
 
   publish-to-psgallery:
     needs:
@@ -203,15 +200,9 @@ jobs:
         NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
       run: |
         $ErrorActionPreference = 'Stop'
-
-        # Strip of 'v' prefix from tag
-        $env:MODULE_VERSION = $env:GITHUB_REF_NAME -replace '^v', ''
-
-        # Generate the new module manifest
-        $moduleManifest = ./build/PSModulePublisher/src/PSModulePublisher/Public/Invoke-Build.ps1
-
-        # Publish the module
-        ./build/PSModulePublisher/src/PSModulePublisher/Public/Invoke-Publish.ps1 -ModuleManifestPath $moduleManifest -Repository PSGallery
+        Import-Module ./build/PSModulePublisher/src/PSModulePublisher -Force
+        $moduleManifest = Invoke-Build
+        Invoke-Publish -ModuleManifestPath $moduleManifest -Repository PSGallery
 
   publish-draft-release:
     needs: [publish-to-psgallery]
