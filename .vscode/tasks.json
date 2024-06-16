@@ -32,7 +32,7 @@
         {
             "label": "Build: Generate module manifest",
             "type": "shell",
-            "command": "MODULE_VERSION=${input:MODULE_VERSION} pwsh build/PSModulePublisher/src/PSModulePublisher/Public/Invoke-Build.ps1",
+            "command": "MODULE_VERSION=${input:MODULE_VERSION} pwsh -Command '$ErrorActionPreference = \"Stop\"; Import-Module ./build/PSModulePublisher/src/PSModulePublisher -Force; $moduleManifest = Invoke-Build'",
             "group": "build"
         },
         {
@@ -41,7 +41,7 @@
                 "Build: Generate module manifest"
             ],
             "type": "shell",
-            "command": "MODULE_NAME=$(basename $(pwd)); NUGET_API_KEY=${input:NUGET_API_KEY} MODULE_VERSION=${input:MODULE_VERSION} pwsh build/PSModulePublisher/src/PSModulePublisher/Public/Invoke-Publish.ps1 -ModuleManifestPath src/$MODULE_NAME/$MODULE_NAME.psd1 -Repository PSGallery -DryRun",
+            "command": "NUGET_API_KEY=${input:NUGET_API_KEY} MODULE_VERSION=${input:MODULE_VERSION} pwsh -Command '$ErrorActionPreference = \"Stop\"; Import-Module ./build/PSModulePublisher/src/PSModulePublisher -Force; $moduleManifest = Invoke-Build; Invoke-Publish -ModuleManifestPath $moduleManifest -Repository PSGallery -DryRun'",
             "group": "build"
         },
         {
@@ -50,7 +50,7 @@
                 "Build: Generate module manifest"
             ],
             "type": "shell",
-            "command": "MODULE_NAME=$(basename $(pwd)); NUGET_API_KEY=${input:NUGET_API_KEY} MODULE_VERSION=${input:MODULE_VERSION} pwsh build/PSModulePublisher/src/PSModulePublisher/Public/Invoke-Publish.ps1 -ModuleManifestPath src/$MODULE_NAME/$MODULE_NAME.psd1 -Repository PSGallery",
+            "command": "NUGET_API_KEY=${input:NUGET_API_KEY} MODULE_VERSION=${input:MODULE_VERSION} pwsh -Command '$ErrorActionPreference = \"Stop\"; Import-Module ./build/PSModulePublisher/src/PSModulePublisher -Force; $moduleManifest = Invoke-Build; Invoke-Publish -ModuleManifestPath $moduleManifest -Repository PSGallery'",
             "group": "build"
         },
 
