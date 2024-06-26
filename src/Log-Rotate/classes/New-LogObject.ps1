@@ -30,7 +30,7 @@ function New-LogObject {
                                 Write-Verbose "Truncating $my_fullname"
                                 if (!$WhatIf) {
                                     # Truncate the file
-                                    [IO.File]::WriteAllText($my_fullname, '')
+                                    Clear-Content $my_fullname
                                 }
                             }else {
                                 Write-Verbose "Not truncating $my_fullname"
