@@ -222,8 +222,8 @@ jobs:
     - name: Publish
       shell: pwsh
       env:
-        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         MODULE_VERSION: ${{ env.MODULE_VERSION }}
+        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
       run: |
         $ErrorActionPreference = 'Stop'
         Import-Module ./build/PSModulePublisher/src/PSModulePublisher -Force
